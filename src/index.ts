@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
@@ -17,13 +17,13 @@ const defaultProxyOptions = createProxyMiddleware({
 });
 app.use(
   rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
+    windowMs: 1000, // 15 minutes
+    max: 2, // limit each IP to 100 requests per windowMs
   }),
 );
 app.use(express.json());
 
-app.get('/', (req: Request, res: Response) => {
+app.get('/', (_: Request, res: Response) => {
   logger.info('Hello, TypeScript is running!');
   res.send('Hello, TypeScript!');
 });
@@ -39,19 +39,19 @@ app.use('/health', (_: Request, res: Response) => {
       timestamp: new Date(),
       database: 'OK',
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     res.status(500).json({
       status: 'DOWN',
       timestamp: new Date(),
       database: 'ERROR',
-      error: error.message,
+      error: (error as Error).message,
     });
   }
 });
-app.get('/error', (req: Request, res: Response) => {
+app.get('/error', (_req: Request, _res: Response) => {
   throw new Error('This is a test error!');
 });
-app.use((err: Error, req: Request, res: Response, next: Function) => {
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   logger.error('Internal server error:', err.message);
   res.status(500).send('Something went wrong!');
 });
