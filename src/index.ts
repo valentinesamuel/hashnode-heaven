@@ -4,17 +4,32 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 import { createProxyMiddleware } from 'http-proxy-middleware';
-import logger from './logger';
+import contextLogger from './logger/logger';
+import { requestIdMiddleware } from './middleware/requestId.middleware';
 
+process.on('unhandledRejection', (error) => {
+  contextLogger.error('Unhandled Rejection at:', error as Error);
+  process.exitCode = 1;
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  contextLogger.error('Uncaught Exception thrown:', error);
+  process.exitCode = 1;
+});
 dotenv.config();
 
 const app = express();
 app.use(helmet({}));
 app.use(cors());
+
+app.use(requestIdMiddleware);
+
 const defaultProxyOptions = createProxyMiddleware({
   target: 'http://www.example.org/api',
   changeOrigin: true,
 });
+
 app.use(
   rateLimit({
     windowMs: 1000,
@@ -23,22 +38,23 @@ app.use(
 );
 app.use(express.json());
 
-app.get('/', (_: Request, res: Response) => {
+app.get('/', (req: Request, res: Response) => {
+  contextLogger.info('Request received', 'human', {
+    requestId: req.requestId,
+    correlationId: req.correlationId,
+  });
   res.send('Hello, TypeScript!');
 });
 
 app.use('/api', defaultProxyOptions);
 
-app.use('/health', (_: Request, res: Response) => {
+app.get('/health', (_req: Request, res: Response) => {
   try {
     // Check database connection
     // const client = await pool.connect();
     // client.release();
-    logger.warn('This is a warning message', {
-      fileName: 'index.ts',
-      lineNumber: 100,
-      columnNumber: 10,
-    });
+
+    aNamedFunction();
 
     res.status(200).json({
       status: 'UP',
@@ -56,11 +72,6 @@ app.use('/health', (_: Request, res: Response) => {
 });
 
 app.get('/error', (_req: Request, _res: Response) => {
-  logger.error(new Error('an error') as unknown as string, {
-    fileName: 'index.ts',
-    lineNumber: 100,
-    columnNumber: 10,
-  });
   throw new Error('This is a test error!');
 });
 
@@ -76,9 +87,15 @@ app.get('/unhandled', (_req: Request, res: Response) => {
 });
 
 app.use((err: Error, _req: Request, _res: Response, next: NextFunction) => {
-  logger.error('Caught exception in middleware:', err);
   next(err);
 });
+
+const aNamedFunction = () => {
+  contextLogger.info('This is a named function', 'json', {
+    extra: 'metadata',
+    some: 'data',
+  });
+};
 
 const port = process.env.PORT ?? 3000;
 app.listen(port, () => {

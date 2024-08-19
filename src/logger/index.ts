@@ -1,41 +1,75 @@
-import winston, { createLogger, format, transports } from 'winston';
-import 'winston-daily-rotate-file';
-// import TelegramLogger from 'winston-telegram';
+// import { readFileSync } from 'fs';
+// import * as path from 'path';
+// import winston, { createLogger, format, transports } from 'winston';
+// import 'winston-daily-rotate-file';
 
-const { combine, timestamp, json, errors } = format;
+// const { combine, timestamp, json, errors } = format;
+// const versionFilePath = path.join(
+//   __dirname,
+//   '../',
+//   '../',
+//   'scripts',
+//   'version.json',
+// );
+// const versionInfo = JSON.parse(readFileSync(versionFilePath, 'utf-8'));
 
-const fileRotateTransport = new winston.transports.DailyRotateFile({
-  filename: 'logs/combined-%DATE%.log',
-  datePattern: 'YYYY-MM-DD',
-  maxSize: '5k',
-  maxFiles: '6d',
-});
+// const buildVersion = versionInfo.buildVersion || 'unknown';
+// const gitCommitHash = versionInfo.gitCommitHash || 'unknown';
 
-fileRotateTransport.on('new', (filename) => {
-  console.log(`New log file created: ${filename}`);
-});
-fileRotateTransport.on('rotate', (oldFilename, newFilename) => {
-  console.log(`Log file rotated: ${oldFilename} -> ${newFilename}`);
-});
-fileRotateTransport.on('archive', (zipFilename) => {
-  console.log(`Log files archived: ${zipFilename}`);
-});
-fileRotateTransport.on('logRemoved', (removedFilename) => {
-  console.log(`Log file removed: ${removedFilename}`);
-});
+// const fileRotateTransport = new winston.transports.DailyRotateFile({
+//   filename: 'logs/combined-%DATE%.log',
+//   datePattern: 'YYYY-MM-DD',
+//   maxSize: '5k',
+//   maxFiles: '6d',
+// });
 
-const logger = createLogger({
-  levels: winston.config.npm.levels,
-  level: process.env.LOG_LEVEL ?? 'info',
-  format: combine(
-    errors({ stack: true }),
-    timestamp({ format: 'YYYY-MM-DD hh:mm:ss.SSS A' }),
-    json(),
-  ),
-  transports: [new transports.Console(), fileRotateTransport],
-  exceptionHandlers: [new transports.File({ filename: 'logs/exceptions.log' })],
-  rejectionHandlers: [new transports.File({ filename: 'logs/rejections.log' })],
-});
+// fileRotateTransport.on('new', async (filename) => {
+//   console.log(`New log file created: ${filename}`);
+// });
+// fileRotateTransport.on('rotate', (oldFilename, newFilename) => {
+//   console.log(`Log file rotated: ${oldFilename} -> ${newFilename}`);
+// });
+// fileRotateTransport.on('archive', (zipFilename) => {
+//   console.log(`Log files archived: ${zipFilename}`);
+// });
+// fileRotateTransport.on('logRemoved', (removedFilename) => {
+//   console.log(`Log file removed: ${removedFilename}`);
+// });
+
+// function getCallerFile() {
+//   const originalPrepareStackTrace = Error.prepareStackTrace;
+//   Error.prepareStackTrace = (_, stack) => stack;
+//   const stack = new Error().stack;
+//   Error.prepareStackTrace = originalPrepareStackTrace;
+
+//   // Skip the first two frames (this function and the log call)
+//   const callerFile =
+//     stack && stack[2] && (stack[2] as unknown as NodeJS.CallSite).getFileName();
+//   return path.basename(callerFile as string);
+// }
+
+// const logger = createLogger({
+//   defaultMeta: {
+//     buildVersion,
+//     gitCommitHash,
+//   },
+//   levels: winston.config.npm.levels,
+//   level: process.env.LOG_LEVEL ?? 'info',
+//   format: format.combine(
+//     format.timestamp(),
+//     format.printf(({ level, message, timestamp, fileName }) => {
+//       return `[${timestamp}] [${fileName}] ${level}: ${message}`;
+//     }),
+//   ),
+//   transports: [new transports.Console(), fileRotateTransport],
+//   exceptionHandlers: [new transports.File({ filename: 'logs/exceptions.log' })],
+//   rejectionHandlers: [new transports.File({ filename: 'logs/rejections.log' })],
+// });
+
+// export function logWithFileContext(level: string, message: string) {
+//   const fileName = getCallerFile();
+//   logger.log({ level, message, fileName });
+// }
 
 // const errorFilter = winston.format((info, opts) => {
 //   return info.level === 'error' ? info : false;
@@ -81,16 +115,4 @@ const logger = createLogger({
 // ],
 // });
 
-// Handle unhandled rejections
-process.on('unhandledRejection', (error) => {
-  logger.error('Unhandled Rejection at:', error);
-  process.exitCode = 1;
-});
-
-// Handle uncaught exceptions
-process.on('uncaughtException', (error) => {
-  logger.error('Uncaught Exception thrown=>>>>:', error);
-  process.exitCode = 1;
-});
-
-export default logger;
+// export default logger;
