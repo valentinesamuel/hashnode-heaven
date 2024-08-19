@@ -16,15 +16,15 @@ const logger = createLogger({
     new transports.Console({
       format: format.combine(format.colorize(), customFormat),
     }),
-    // new transports.File({
-    //   filename: 'logs/combined.log',
-    //   format: customFormat,
-    // }),
-    // new transports.File({
-    //   filename: 'logs/error.log',
-    //   level: 'error',
-    //   format: customFormat,
-    // }),
+    new transports.File({
+      filename: 'logs/combined.log',
+      format: customFormat,
+    }),
+    new transports.File({
+      filename: 'logs/error.log',
+      level: 'error',
+      format: customFormat,
+    }),
   ],
 });
 
