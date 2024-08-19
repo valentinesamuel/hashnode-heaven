@@ -27,6 +27,8 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4",
     "winston": "^3.13.1",
+    "winston-daily-rotate-file": "^5.0.0",
+    "winston-telegram": "^2.7.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
