@@ -1,18 +1,18 @@
+import contextLogger from './logger/logger';
 import express, { NextFunction, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 import { createProxyMiddleware } from 'http-proxy-middleware';
-import contextLogger from './logger/logger';
 import { requestIdMiddleware } from './middleware/requestId.middleware';
+import requestLogger from './middleware/requestlogger.middleware';
 
 process.on('unhandledRejection', (error) => {
   contextLogger.error('Unhandled Rejection at:', error as Error);
   process.exitCode = 1;
 });
 
-// Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
   contextLogger.error('Uncaught Exception thrown:', error);
   process.exitCode = 1;
@@ -20,10 +20,13 @@ process.on('uncaughtException', (error) => {
 dotenv.config();
 
 const app = express();
+
+app.use(requestIdMiddleware);
+app.use(requestLogger);
+
 app.use(helmet({}));
 app.use(cors());
 
-app.use(requestIdMiddleware);
 
 const defaultProxyOptions = createProxyMiddleware({
   target: 'http://www.example.org/api',
@@ -38,11 +41,7 @@ app.use(
 );
 app.use(express.json());
 
-app.get('/', (req: Request, res: Response) => {
-  contextLogger.info('Request received', 'human', {
-    requestId: req.requestId,
-    correlationId: req.correlationId,
-  });
+app.get('/', (_req: Request, res: Response) => {
   res.send('Hello, TypeScript!');
 });
 
@@ -72,13 +71,13 @@ app.get('/health', (_req: Request, res: Response) => {
 });
 
 app.get('/error', (_req: Request, _res: Response) => {
+
   throw new Error('This is a test error!');
+
 });
 
 app.get('/uncaught', (_req: Request, _res: Response, _next: NextFunction) => {
-  setTimeout(() => {
     throw new Error('hello world');
-  }, 250);
 });
 
 app.get('/unhandled', (_req: Request, res: Response) => {

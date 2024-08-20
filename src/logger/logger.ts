@@ -3,6 +3,41 @@
 import { createLogger, transports, Logger, LogEntry } from 'winston';
 import { jsonFormat, humanReadableFormat } from './format';
 import { getCallerInfo } from './util';
+import { readFileSync } from 'fs';
+import * as path from 'path';
+import 'winston-daily-rotate-file';
+
+const fileRotateTransport = new transports.DailyRotateFile({
+  filename: 'logs/combined-%DATE%.log',
+  datePattern: 'YYYY-MM-DD',
+  maxSize: '5k',
+  maxFiles: '6d',
+});
+
+fileRotateTransport.on('new', async (filename) => {
+  console.log(`New log file created: ${filename}`);
+});
+fileRotateTransport.on('rotate', (oldFilename, newFilename) => {
+  console.log(`Log file rotated: ${oldFilename} -> ${newFilename}`);
+});
+fileRotateTransport.on('archive', (zipFilename) => {
+  console.log(`Log files archived: ${zipFilename}`);
+});
+fileRotateTransport.on('logRemoved', (removedFilename) => {
+  console.log(`Log file removed: ${removedFilename}`);
+});
+
+const versionFilePath = path.join(
+  __dirname,
+  '../',
+  '../',
+  'scripts',
+  'version.json',
+);
+const versionInfo = JSON.parse(readFileSync(versionFilePath, 'utf-8'));
+
+const buildVersion = versionInfo.buildVersion || 'unknown';
+const gitCommitHash = versionInfo.gitCommitHash || 'unknown';
 
 class ContextLogger {
   private logger: Logger;
@@ -11,7 +46,13 @@ class ContextLogger {
     this.logger = createLogger({
       level: 'info',
       format: defaultFormat === 'json' ? jsonFormat : humanReadableFormat,
-      transports: [new transports.Console()],
+      transports: [new transports.Console(), fileRotateTransport],
+      exceptionHandlers: [
+        new transports.File({ filename: 'logs/exceptions.log' }),
+      ],
+      rejectionHandlers: [
+        new transports.File({ filename: 'logs/rejections.log' }),
+      ],
     });
   }
 
@@ -26,7 +67,7 @@ class ContextLogger {
     const logger = createLogger({
       level: 'info',
       format: format === 'json' ? jsonFormat : humanReadableFormat,
-      transports: [new transports.Console()],
+      transports: [new transports.Console(), fileRotateTransport],
     });
 
     const logObject: Record<string, unknown> = {
@@ -35,12 +76,14 @@ class ContextLogger {
       fileName,
       functionName,
       lineNumber,
+      buildVersion,
+      gitCommitHash,
       ...metadata, // Merge in additional metadata
     };
 
     if (level === 'error' && error instanceof Error) {
       logObject.message = error.message;
-      logObject.stack = error.stack; // Include the full error stack trace
+      logObject.stack = error.stack; 
     }
 
     logger.log(logObject as LogEntry);
@@ -52,7 +95,9 @@ class ContextLogger {
     format: 'json' | 'human' = 'json',
     metadata: Record<string, unknown> = {},
   ) {
-    this.log('error', message, error, format, metadata);
+    setTimeout(() => {
+      this.log('error', message, error, format, metadata);
+    }, 250);
   }
 
   warn(
@@ -79,7 +124,6 @@ class ContextLogger {
     this.log('debug', message, null, format, metadata);
   }
 
-  // Utility function to generate unique IDs
   static generateUniqueId() {
     return Math.random().toString(36).substring(2) + Date.now().toString(36);
   }
