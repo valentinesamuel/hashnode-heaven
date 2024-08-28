@@ -5,8 +5,12 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 import { createProxyMiddleware } from 'http-proxy-middleware';
+import redisClient from './config/redisClient';
+
 import { requestIdMiddleware } from './middleware/requestId.middleware';
 import requestLogger from './middleware/requestlogger.middleware';
+import { verifyToken } from './middleware/auth.middleware';
+import { generateToken, storeTokenInRedis } from './services/tokenService';
 
 process.on('unhandledRejection', (error) => {
   contextLogger.error('Unhandled Rejection at:', error as Error);
@@ -45,6 +49,17 @@ app.get('/', (_req: Request, res: Response) => {
 });
 
 app.use('/api', defaultProxyOptions);
+
+app.post('/login', (req: Request, res: Response) => {
+  const payload = { userId: req.body.userId };
+  const token = generateToken(payload);
+  storeTokenInRedis(token);
+  res.json({ token });
+});
+
+app.get('/protected', verifyToken, (req: Request, res: Response) => {
+  res.send(req?.user);
+});
 
 app.get('/health', (_req: Request, res: Response) => {
   try {
@@ -92,6 +107,7 @@ app.get('/unhandled', (_req: Request, res: Response) => {
 });
 
 app.use((err: Error, _req: Request, _res: Response, next: NextFunction) => {
+  console.error(err);
   next(err);
 });
 
@@ -103,6 +119,8 @@ const aNamedFunction = () => {
 };
 
 const port = process.env.PORT ?? 3000;
-app.listen(port, () => {
+
+app.listen(port, async () => {
+  await redisClient.connect();
   console.debug('Server is running on port 3000');
 });
