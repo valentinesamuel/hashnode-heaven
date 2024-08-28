@@ -27,7 +27,6 @@ app.use(requestLogger);
 app.use(helmet({}));
 app.use(cors());
 
-
 const defaultProxyOptions = createProxyMiddleware({
   target: 'http://www.example.org/api',
   changeOrigin: true,
@@ -52,15 +51,17 @@ app.get('/health', (_req: Request, res: Response) => {
     // Check database connection
     // const client = await pool.connect();
     // client.release();
-
     aNamedFunction();
-
     res.status(200).json({
       status: 'UP',
       timestamp: new Date(),
       database: 'OK',
     });
   } catch (error: unknown) {
+    contextLogger.error('Error in health check', error as Error, 'json', {
+      extra: 'metadata',
+      some: 'data',
+    });
     res.status(500).json({
       status: 'DOWN',
       timestamp: new Date(),
@@ -70,14 +71,19 @@ app.get('/health', (_req: Request, res: Response) => {
   }
 });
 
-app.get('/error', (_req: Request, _res: Response) => {
-
-  throw new Error('This is a test error!');
-
+app.get('/error', (req: Request, _res: Response) => {
+  try {
+    throw new Error('This is a test error!');
+  } catch (error: unknown) {
+    contextLogger.error('Purposeful Error', error as Error, 'json', {
+      requestId: req.requestId,
+    });
+  }
 });
 
 app.get('/uncaught', (_req: Request, _res: Response, _next: NextFunction) => {
-    throw new Error('hello world');
+  contextLogger.error('This is an uncaught error', new Error('Bad error'));
+  throw new Error('hello world');
 });
 
 app.get('/unhandled', (_req: Request, res: Response) => {
