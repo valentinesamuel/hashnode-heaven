@@ -1,16 +1,23 @@
-import contextLogger from './logger/logger';
 import express, { NextFunction, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 import { createProxyMiddleware } from 'http-proxy-middleware';
-import redisClient from './config/redisClient';
+import { v4 as uuidv4 } from 'uuid';
 
+import { jwtExpiration } from './config/jwtConfig';
+import contextLogger from './logger/logger';
+import redisClient from './config/redisClient';
 import { requestIdMiddleware } from './middleware/requestId.middleware';
 import requestLogger from './middleware/requestlogger.middleware';
 import { verifyToken } from './middleware/auth.middleware';
-import { generateToken, storeTokenInRedis } from './services/tokenService';
+import {
+  blacklistToken,
+  generateToken,
+  setSessionIdInRedis,
+  setTokenInRedis,
+} from './services/tokenService';
 
 process.on('unhandledRejection', (error) => {
   contextLogger.error('Unhandled Rejection at:', error as Error);
@@ -51,10 +58,24 @@ app.get('/', (_req: Request, res: Response) => {
 app.use('/api', defaultProxyOptions);
 
 app.post('/login', (req: Request, res: Response) => {
-  const payload = { userId: req.body.userId };
-  const token = generateToken(payload);
-  storeTokenInRedis(token);
+  const userId = req.body.userId;
+  const sessionId = uuidv4();
+  const token = generateToken({ userId, sessionId });
+
+  setTokenInRedis({ token, userId, sessionId, jwtExpiration });
+  setSessionIdInRedis({ sessionId, userId, token, jwtExpiration });
+
   res.json({ token });
+});
+
+app.post('/logout', verifyToken, async (req: Request, res: Response) => {
+  const token = req.headers['authorization']?.split(' ')[1];
+  if (!token) return res.status(400).send('No token provided.');
+
+  // Blacklist the token
+  await blacklistToken(token);
+
+  res.send('Logged out and token blacklisted.');
 });
 
 app.get('/protected', verifyToken, (req: Request, res: Response) => {
