@@ -3,9 +3,9 @@ import redisClient from '../config/redisClient';
 import { secretKey, jwtExpiration, redisExpiration } from '../config/jwtConfig';
 
 export function generateToken(payload: string | Buffer | object) {
-  return jwt.sign(payload, secretKey, { 
+  return jwt.sign(payload, secretKey, {
     expiresIn: jwtExpiration,
-   });
+  });
 }
 
 export function decodeToken(token: string) {
@@ -59,8 +59,7 @@ export function setSessionIdInRedis({
 }
 
 export async function blacklistToken(token: string) {
-  // Add the token to a blacklist set with an expiration time
-  const expirationTime = 2 * 1000; // Example: 1 hour
+  const expirationTime = 2 * 1000;
   await redisClient.set(`blacklist:${token}`, expirationTime, {
     EX: redisExpiration,
   });

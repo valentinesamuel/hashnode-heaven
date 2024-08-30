@@ -72,7 +72,6 @@ app.post('/logout', verifyToken, async (req: Request, res: Response) => {
   const token = req.headers['authorization']?.split(' ')[1];
   if (!token) return res.status(400).send('No token provided.');
 
-  // Blacklist the token
   await blacklistToken(token);
 
   res.send('Logged out and token blacklisted.');
