@@ -45,7 +45,7 @@ const defaultProxyOptions = createProxyMiddleware({
 
 app.use(
   rateLimit({
-    windowMs: 1000,
+    windowMs: 2000,
     max: 2,
   }),
 );
