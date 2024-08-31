@@ -17,6 +17,7 @@ exec('git rev-parse HEAD', (error, stdout, stderr) => {
     };
 
     const filePath = path.join(__dirname, 'version.json');
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
     writeFile(filePath, JSON.stringify(versionInfo, null, 2), (err) => {
       if (err) {
         console.error(`Error writing version file: ${err}`);

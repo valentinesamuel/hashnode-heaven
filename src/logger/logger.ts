@@ -1,5 +1,3 @@
-// logger/logger.ts
-
 import { createLogger, transports, Logger, LogEntry } from 'winston';
 import { jsonFormat, humanReadableFormat } from './format';
 import { getCallerInfo } from './util';
@@ -37,6 +35,7 @@ const versionFilePath = path.join(
   'scripts',
   'version.json',
 );
+// eslint-disable-next-line security/detect-non-literal-fs-filename
 const versionInfo = JSON.parse(readFileSync(versionFilePath, 'utf-8'));
 
 const buildVersion = versionInfo.buildVersion || 'unknown';
