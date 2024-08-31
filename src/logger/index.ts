@@ -1,41 +1,43 @@
-import { createLogger, format, transports } from 'winston';
+// import { readFileSync } from 'fs';
+// import * as path from 'path';
+// import winston, { createLogger, format, transports } from 'winston';
+// import 'winston-daily-rotate-file';
 
-// Define custom log format
-const customFormat = format.combine(
-  format.timestamp(),
-  format.errors({ stack: true }),
-  format.splat(),
-  format.json(),
-);
+// const { combine, timestamp, json, errors } = format;
 
-// Create the logger
-const logger = createLogger({
-  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
-  format: customFormat,
-  transports: [
-    new transports.Console({
-      format: format.combine(format.colorize(), customFormat),
-    }),
-    // new transports.File({
-    //   filename: 'logs/combined.log',
-    //   format: customFormat,
-    // }),
-    // new transports.File({
-    //   filename: 'logs/error.log',
-    //   level: 'error',
-    //   format: customFormat,
-    // }),
-  ],
-});
 
-// Handle unhandled rejections
-process.on('unhandledRejection', (error) => {
-  logger.error('Unhandled Rejection at:', error);
-});
+// const fileRotateTransport = new winston.transports.DailyRotateFile({
+//   filename: 'logs/combined-%DATE%.log',
+//   datePattern: 'YYYY-MM-DD',
+//   maxSize: '5k',
+//   maxFiles: '6d',
+// });
 
-// Handle uncaught exceptions
-process.on('uncaughtException', (error) => {
-  logger.error('Uncaught Exception thrown:', error);
-});
+// fileRotateTransport.on('new', async (filename) => {
+//   console.log(`New log file created: ${filename}`);
+// });
+// fileRotateTransport.on('rotate', (oldFilename, newFilename) => {
+//   console.log(`Log file rotated: ${oldFilename} -> ${newFilename}`);
+// });
+// fileRotateTransport.on('archive', (zipFilename) => {
+//   console.log(`Log files archived: ${zipFilename}`);
+// });
+// fileRotateTransport.on('logRemoved', (removedFilename) => {
+//   console.log(`Log file removed: ${removedFilename}`);
+// });}
 
-export default logger;
+// const logger = createLogger({
+//   levels: winston.config.npm.levels,
+//   level: process.env.LOG_LEVEL ?? 'info',
+//   format: format.combine(
+//     format.timestamp(),
+//     format.printf(({ level, message, timestamp, fileName }) => {
+//       return `[${timestamp}] [${fileName}] ${level}: ${message}`;
+//     }),
+//   ),
+//   transports: [new transports.Console(), fileRotateTransport],
+//   exceptionHandlers: [new transports.File({ filename: 'logs/exceptions.log' })],
+//   rejectionHandlers: [new transports.File({ filename: 'logs/rejections.log' })],
+// });
+
+
