@@ -18,6 +18,8 @@ import {
   setSessionIdInRedis,
   setTokenInRedis,
 } from './services/tokenService';
+import validateRequest from './middleware/validator';
+import { userSchema } from './validators/schema';
 
 process.on('unhandledRejection', (error) => {
   contextLogger.error('Unhandled Rejection at:', error as Error);
@@ -59,16 +61,20 @@ app.get('/', (_req: Request, res: Response) => {
 
 app.use('/api', defaultProxyOptions);
 
-app.post('/login', (req: Request, res: Response) => {
-  const userId = req.body.userId;
-  const sessionId = uuidv4();
-  const token = generateToken({ userId, sessionId });
+app.post(
+  '/login',
+  validateRequest(userSchema),
+  (req: Request, res: Response) => {
+    const userId = req.body.userId;
+    const sessionId = uuidv4();
+    const token = generateToken({ userId, sessionId });
 
-  setTokenInRedis({ token, userId, sessionId, jwtExpiration });
-  setSessionIdInRedis({ sessionId, userId, token, jwtExpiration });
+    setTokenInRedis({ token, userId, sessionId, jwtExpiration });
+    setSessionIdInRedis({ sessionId, userId, token, jwtExpiration });
 
-  res.json({ token });
-});
+    res.json({ token });
+  },
+);
 
 app.post('/logout', verifyToken, async (req: Request, res: Response) => {
   const token = req.headers['authorization']?.split(' ')[1];
