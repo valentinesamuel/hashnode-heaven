@@ -1,6 +1,5 @@
 import express, { NextFunction, Request, Response } from 'express';
 import dotenv from 'dotenv';
-import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 import { createProxyMiddleware } from 'http-proxy-middleware';
@@ -18,8 +17,9 @@ import {
   setSessionIdInRedis,
   setTokenInRedis,
 } from './services/tokenService';
-import validateRequest from './middleware/validator';
+import validateRequest from './middleware/validator.middleware';
 import { userSchema } from './validators/schema';
+import { helmetMiddleware } from './middleware/security.middleware';
 
 process.on('unhandledRejection', (error) => {
   contextLogger.error('Unhandled Rejection at:', error as Error);
@@ -34,10 +34,12 @@ dotenv.config();
 
 const app = express();
 
+app.disable('x-powered-by');
+
 app.use(requestIdMiddleware);
 app.use(requestLogger);
 
-app.use(helmet({}));
+app.use(helmetMiddleware);
 
 app.use(cors());
 
