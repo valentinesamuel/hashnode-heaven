@@ -1,7 +1,6 @@
 import express, { NextFunction, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
-import cors from 'cors';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -20,6 +19,7 @@ import {
 import validateRequest from './middleware/validator.middleware';
 import { userSchema } from './validators/schema';
 import { helmetMiddleware } from './middleware/security.middleware';
+import { corsMiddleware } from './middleware/cors.middleware';
 
 process.on('unhandledRejection', (error) => {
   contextLogger.error('Unhandled Rejection at:', error as Error);
@@ -41,7 +41,7 @@ app.use(requestLogger);
 
 app.use(helmetMiddleware);
 
-app.use(cors());
+app.use(corsMiddleware);
 
 const defaultProxyOptions = createProxyMiddleware({
   target: 'http://www.example.org/api',
