@@ -32,7 +32,7 @@ process.on('uncaughtException', (error) => {
 });
 dotenv.config();
 
-const app = express();
+export const app = express();
 
 app.disable('x-powered-by');
 
