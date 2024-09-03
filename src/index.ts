@@ -1,25 +1,20 @@
+import 'reflect-metadata';
 import express, { NextFunction, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
 import { createProxyMiddleware } from 'http-proxy-middleware';
-import { v4 as uuidv4 } from 'uuid';
 
-import { jwtExpiration } from './config/jwtConfig';
 import contextLogger from './logger/logger';
 import redisClient from './config/redisClient';
 import { requestIdMiddleware } from './middleware/requestId.middleware';
 import requestLogger from './middleware/requestlogger.middleware';
 import { verifyToken } from './middleware/auth.middleware';
-import {
-  blacklistToken,
-  generateToken,
-  setSessionIdInRedis,
-  setTokenInRedis,
-} from './services/utils/tokenService';
 import validateRequest from './middleware/validator.middleware';
-import { userSchema } from './validators/schema';
+import { userSchema } from './validators/user.schema';
 import { helmetMiddleware } from './middleware/security.middleware';
 import { corsMiddleware } from './middleware/cors.middleware';
+import { PgDataSource } from './ormconfig';
+import { loginUser, logoutUser } from './controller/user.controller';
 
 process.on('unhandledRejection', (error) => {
   contextLogger.error('Unhandled Rejection at:', error as Error);
@@ -63,29 +58,9 @@ app.get('/', (_req: Request, res: Response) => {
 
 app.use('/api', defaultProxyOptions);
 
-app.post(
-  '/login',
-  validateRequest(userSchema),
-  (req: Request, res: Response) => {
-    const userId = req.body.userId;
-    const sessionId = uuidv4();
-    const token = generateToken({ userId, sessionId });
+app.post('/login', validateRequest(userSchema), loginUser);
 
-    setTokenInRedis({ token, userId, sessionId, jwtExpiration });
-    setSessionIdInRedis({ sessionId, userId, token, jwtExpiration });
-
-    res.json({ token });
-  },
-);
-
-app.post('/logout', verifyToken, async (req: Request, res: Response) => {
-  const token = req.headers['authorization']?.split(' ')[1];
-  if (!token) return res.status(400).send('No token provided.');
-
-  await blacklistToken(token);
-
-  res.send('Logged out and token blacklisted.');
-});
+app.post('/logout', verifyToken, logoutUser);
 
 app.get('/protected', verifyToken, (req: Request, res: Response) => {
   res.send(req?.user);
@@ -93,9 +68,6 @@ app.get('/protected', verifyToken, (req: Request, res: Response) => {
 
 app.get('/health', (_req: Request, res: Response) => {
   try {
-    // Check database connection
-    // const client = await pool.connect();
-    // client.release();
     aNamedFunction();
     res.status(200).json({
       status: 'UP',
@@ -150,7 +122,18 @@ const aNamedFunction = () => {
 
 const port = process.env.PORT ?? 3000;
 
-app.listen(port, async () => {
-  await redisClient.connect();
-  console.debug('Server is running on port 3000');
-});
+app
+  .listen(port, async () => {
+    await redisClient.connect();
+    PgDataSource.initialize()
+      .then(() => {
+        console.log('Data Source has been initialized!');
+      })
+      .catch((err) => {
+        console.error('Error during Data Source initialization', err);
+      });
+    console.debug('Server is running on port 3000');
+  })
+  .on('error', (err) => {
+    console.error('Failed to start server:', err);
+  });
