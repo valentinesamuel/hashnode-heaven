@@ -15,7 +15,7 @@ import {
   generateToken,
   setSessionIdInRedis,
   setTokenInRedis,
-} from './services/tokenService';
+} from './services/utils/tokenService';
 import validateRequest from './middleware/validator.middleware';
 import { userSchema } from './validators/schema';
 import { helmetMiddleware } from './middleware/security.middleware';

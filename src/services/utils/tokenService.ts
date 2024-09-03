@@ -1,6 +1,10 @@
 import jwt from 'jsonwebtoken';
-import redisClient from '../config/redisClient';
-import { secretKey, jwtExpiration, redisExpiration } from '../config/jwtConfig';
+import redisClient from '../../config/redisClient';
+import {
+  secretKey,
+  jwtExpiration,
+  redisExpiration,
+} from '../../config/jwtConfig';
 
 export function generateToken(payload: string | Buffer | object) {
   return jwt.sign(payload, secretKey, {

@@ -6,6 +6,18 @@ const config: Config = {
   testMatch: ['**/?(*.)+(e2e|test).ts'],
   collectCoverage: true,
   coverageDirectory: 'coverage',
+  projects: [
+    {
+      displayName: 'unit',
+      testMatch: ['**/?(*.)+(test).ts'],
+      preset: 'ts-jest',
+    },
+    {
+      displayName: 'e2e',
+      testMatch: ['**/?(*.)+(e2e).ts'],
+      preset: 'ts-jest',
+    },
+  ],
 };
 
 export default config;
