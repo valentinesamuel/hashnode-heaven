@@ -7,8 +7,8 @@ export const PgDataSource = new DataSource({
   username: 'postgres',
   password: 'password',
   database: 'postgres',
-  entities: [__dirname + '/entity/**/*.ts'],
-  migrations: [__dirname + '/migration/**/*.ts'],
+  entities: [__dirname + '/entities/**/*.entity.ts'],
+  migrations: [__dirname + '/migrations/**/*.ts'],
   synchronize: true,
   logging: true,
   extra: {
