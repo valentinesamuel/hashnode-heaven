@@ -3,7 +3,6 @@ import express, { NextFunction, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
 import { createProxyMiddleware } from 'http-proxy-middleware';
-
 import contextLogger from './logger/logger';
 import redisClient from './config/redisClient';
 import { requestIdMiddleware } from './middleware/requestId.middleware';
@@ -20,26 +19,23 @@ process.on('unhandledRejection', (error) => {
   contextLogger.error('Unhandled Rejection at:', error as Error);
   process.exitCode = 1;
 });
-
 process.on('uncaughtException', (error) => {
   contextLogger.error('Uncaught Exception thrown:', error);
   process.exitCode = 1;
 });
+
 dotenv.config();
 
 export const app = express();
 
 app.disable('x-powered-by');
-
 app.use(requestIdMiddleware);
 app.use(requestLogger);
-
 app.use(helmetMiddleware);
-
 app.use(corsMiddleware);
 
 const defaultProxyOptions = createProxyMiddleware({
-  target: 'http://www.example.org/api',
+  target: 'https://www.example.org/api',
   changeOrigin: true,
 });
 

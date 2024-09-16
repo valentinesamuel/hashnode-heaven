@@ -24,7 +24,12 @@ export const loginUser = async (req: Request, res: Response) => {
       token,
     });
 
-    const newUser = await userService.getUserById(userId);
+    const newUser = await userService.createUser(userId);
+
+    if (!newUser) {
+      return ResponseHandler.badRequest(res, 'Failed to create user');
+    }
+
     return ResponseHandler.created(
       res,
       { token, ...newUser },

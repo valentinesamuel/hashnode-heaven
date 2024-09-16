@@ -9,9 +9,11 @@ export class UserService {
     this.userRepository = PgDataSource.getRepository(User);
   }
 
-  async createUser(userData: Partial<User>): Promise<User> {
+  async createUser(userData: Partial<User>): Promise<User | null> {
     const user = this.userRepository.create(userData);
-    return this.userRepository.save(user);
+    const newUser = await this.userRepository.save(user);
+    if (!newUser) return null;
+    return newUser;
   }
 
   async getUserById(id: number): Promise<Partial<User> | null> {

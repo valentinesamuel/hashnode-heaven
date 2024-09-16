@@ -7,7 +7,7 @@ export class User {
     this.email = email;
     this.password = password;
   }
-  
+
   @PrimaryGeneratedColumn()
   id!: number;
 
@@ -19,7 +19,6 @@ export class User {
 
   @Column()
   password: string;
-
 
   @BeforeInsert()
   async hashPassword(): Promise<void> {
