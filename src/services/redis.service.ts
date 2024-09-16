@@ -1,7 +1,7 @@
 import { jwtExpiration, redisExpiration } from '../config/jwtConfig';
 import redisClient from '../config/redisClient';
 
-export function setTokenInRedis({
+export async function setTokenInRedis({
   token,
   userId,
   sessionId,
@@ -10,7 +10,7 @@ export function setTokenInRedis({
   userId: string;
   sessionId: string;
 }) {
-  redisClient.hSet(`tokens:${token}`, [
+  await redisClient.hSet(`tokens:${token}`, [
     'user_id',
     userId,
     'session_id',
@@ -20,10 +20,10 @@ export function setTokenInRedis({
     'status',
     'active',
   ]);
-  redisClient.expire(`tokens:${token}`, redisExpiration);
+  await redisClient.expire(`tokens:${token}`, redisExpiration);
 }
 
-export function setSessionIdInRedis({
+export async function setSessionIdInRedis({
   sessionId,
   userId,
   token,
@@ -32,7 +32,7 @@ export function setSessionIdInRedis({
   userId: string;
   token: string;
 }) {
-  redisClient.hSet(`sessions:${sessionId}`, [
+  await redisClient.hSet(`sessions:${sessionId}`, [
     'user_id',
     userId,
     'token',
@@ -40,18 +40,12 @@ export function setSessionIdInRedis({
     'expires_at',
     jwtExpiration.toString(),
   ]);
-  redisClient.expire(`sessions:${sessionId}`, redisExpiration);
+  await redisClient.expire(`sessions:${sessionId}`, redisExpiration);
 }
 
 export async function blacklistToken(token: string) {
   const expirationTime = 2 * 1000;
-  const blacklisted = await redisClient.set(
-    `blacklist:${token}`,
-    expirationTime,
-    {
-      EX: redisExpiration,
-    },
-  );
-
-  return blacklisted;
+  return await redisClient.set(`blacklist:${token}`, expirationTime, {
+    EX: redisExpiration,
+  });
 }

@@ -14,6 +14,7 @@ import { helmetMiddleware } from './middleware/security.middleware';
 import { corsMiddleware } from './middleware/cors.middleware';
 import { PgDataSource } from './ormconfig';
 import { loginUser, logoutUser } from './controller/user.controller';
+import { getHealthStatus } from './controller/health.controller';
 
 process.on('unhandledRejection', (error) => {
   contextLogger.error('Unhandled Rejection at:', error as Error);
@@ -62,31 +63,11 @@ app.get('/protected', verifyToken, (req: Request, res: Response) => {
   res.send(req?.user);
 });
 
-app.get('/health', (_req: Request, res: Response) => {
-  try {
-    aNamedFunction();
-    res.status(200).json({
-      status: 'UP',
-      timestamp: new Date(),
-      database: 'OK',
-    });
-  } catch (error: unknown) {
-    contextLogger.error('Error in health check', error as Error, 'json', {
-      extra: 'metadata',
-      some: 'data',
-    });
-    res.status(500).json({
-      status: 'DOWN',
-      timestamp: new Date(),
-      database: 'ERROR',
-      error: (error as Error).message,
-    });
-  }
-});
+app.get('/health', getHealthStatus);
 
 app.get('/error', (req: Request, _res: Response) => {
   try {
-    throw new Error('This is a test error!');
+    throw new Error('This is a test Ferror!');
   } catch (error: unknown) {
     contextLogger.error('Purposeful Error', error as Error, 'json', {
       requestId: req.requestId,
@@ -99,8 +80,8 @@ app.get('/uncaught', (_req: Request, _res: Response, _next: NextFunction) => {
   throw new Error('hello world');
 });
 
-app.get('/unhandled', (_req: Request, res: Response) => {
-  Promise.reject(new Error('This is an unhandled rejection!'));
+app.get('/unhandled', async (_req: Request, res: Response) => {
+  await Promise.reject(new Error('This is an unhandled rejection!'));
   res.send('This will not execute because of the unhandled rejection.');
 });
 
@@ -108,13 +89,6 @@ app.use((err: Error, _req: Request, _res: Response, next: NextFunction) => {
   console.error(err);
   next(err);
 });
-
-const aNamedFunction = () => {
-  contextLogger.info('This is a named function', 'json', {
-    extra: 'metadata',
-    some: 'data',
-  });
-};
 
 const port = process.env.PORT ?? 3000;
 
