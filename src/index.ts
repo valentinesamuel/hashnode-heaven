@@ -51,11 +51,12 @@ app.get('/', (_req: Request, res: Response) => {
   res.send('Hello, TypeScript!');
 });
 
+app.use('/auth', authRoute);
+
 app.use('/api', defaultProxyOptions);
 
 app.get('/health', getHealthStatus);
 
-app.use('/auth', authRoute);
 
 app.get('/error', (req: Request, _res: Response) => {
   try {

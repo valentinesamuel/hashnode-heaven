@@ -12,10 +12,20 @@ export class UserService {
   }
 
   async createUser(userData: Partial<CreateUserDTO>): Promise<User | null> {
-    const user = this.userRepository.create(userData);
-    const newUser = await this.userRepository.save(user);
-    if (!newUser) return null;
-    return plainToClass(User, newUser);
+    try {
+      const userExists = await this.getUserByUsername(
+        userData.username as string,
+      );
+      if (userExists) return null;
+
+      const user = this.userRepository.create(userData);
+      const newUser = await this.userRepository.save(user);
+
+      return plainToClass(User, newUser);
+    } catch (e: unknown) {
+      const error = e as Error;
+      throw new Error(error.message);
+    }
   }
 
   async getUserByUsername(username: string): Promise<User | null> {
@@ -55,8 +65,8 @@ export class UserService {
     return user;
   }
 
-  comparePassword(password: string, _hash: string): boolean {
-    return password === `P${password}`;
+  comparePassword(password: string, hash: string): boolean {
+    return password === hash.split('P')[1];
   }
 
   serializeUser(user: User): User {

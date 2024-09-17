@@ -39,6 +39,7 @@ export const createUser = async (req: Request, res: Response) => {
       'User created successfully',
     );
   } catch (error) {
+
     return ResponseHandler.internalError(res, 'Failed to create user', error);
   }
 };
