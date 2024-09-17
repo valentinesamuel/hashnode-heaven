@@ -5,7 +5,6 @@
 
 // const { combine, timestamp, json, errors } = format;
 
-
 // const fileRotateTransport = new winston.transports.DailyRotateFile({
 //   filename: 'logs/combined-%DATE%.log',
 //   datePattern: 'YYYY-MM-DD',
@@ -39,5 +38,3 @@
 //   exceptionHandlers: [new transports.File({ filename: 'logs/exceptions.log' })],
 //   rejectionHandlers: [new transports.File({ filename: 'logs/rejections.log' })],
 // });
-
-
