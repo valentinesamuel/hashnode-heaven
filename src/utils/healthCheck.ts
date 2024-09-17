@@ -20,7 +20,6 @@ export const checkHealth = async () => {
     { status: 'ok' | 'error'; message?: string }
   > = {};
 
-  // Check Postgres
   try {
     await pgPool.query('SELECT NOW()');
     healthStatus.postgres = { status: 'ok' };
@@ -29,7 +28,6 @@ export const checkHealth = async () => {
     healthStatus.postgres = { status: 'error', message: error.message };
   }
 
-  // Check Redis
   try {
     await redisClient.ping();
     healthStatus.redis = { status: 'ok' };

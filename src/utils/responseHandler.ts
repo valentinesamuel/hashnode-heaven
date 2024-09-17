@@ -42,6 +42,15 @@ class ResponseHandler {
     );
   }
 
+  static unauthorized(res: Response, message: string, details?: unknown) {
+    return this.error(
+      res,
+      StatusCodes.UNAUTHORIZED,
+      message || getReasonPhrase(StatusCodes.UNAUTHORIZED),
+      details,
+    );
+  }
+
   static notFound(res: Response, message: string, details?: unknown) {
     return this.error(
       res,

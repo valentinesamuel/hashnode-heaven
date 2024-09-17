@@ -1,47 +1,46 @@
-import { z } from 'zod';
+import { plainToInstance } from 'class-transformer';
+import { validate, ValidationError } from 'class-validator';
 import { Request, Response, NextFunction } from 'express';
 
-type ZodErrorMessage = {
-  code?: string;
-  path?: string[];
-  message?: string;
-  keys?: string[];
-  expected?: string;
-  received?: string;
-};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ClassConstructor<T> = new (...args: any[]) => T;
 
-const validateRequest =
-  (schema: z.ZodSchema) =>
-  (req: Request, res: Response, next: NextFunction) => {
-    try {
-      schema.parse(req.body);
-      next();
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const formattedErrors = error.errors.map((err) => {
-          const { code, path } = err as ZodErrorMessage;
+function validateRequest<T extends object>(type: ClassConstructor<T>) {
+  return async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    const dtoObj = plainToInstance(type, req.body);
+    const errors = await validate(dtoObj, {
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    });
 
-          if (code === 'unrecognized_keys') {
-            const unrecognizedKeys =
-              (err as ZodErrorMessage).keys?.join(', ') ?? '';
-            return `Unrecognized key(s) in: [ ${unrecognizedKeys} ]`;
-          }
-
-          const { expected, received } = err as {
-            expected: string;
-            received: string;
-          };
-
-          return `Expected ${expected} but got ${received} on ${path?.join('.')}`;
-        });
-
-        return res.status(400).json({
-          status: 'error',
-          errors: formattedErrors,
-        });
-      }
-      next(error);
+    if (errors.length > 0) {
+      const formattedErrors = formatErrors(errors);
+      res.status(400).json({
+        status: 'error',
+        errors: formattedErrors,
+      });
+      return;
     }
+
+    req.body = dtoObj;
+    next();
   };
+}
+
+function formatErrors(errors: ValidationError[]): string[] {
+  return errors.flatMap((error) => {
+    if (error.constraints) {
+      return Object.values(error.constraints);
+    }
+    if (error.children && error.children.length > 0) {
+      return formatErrors(error.children);
+    }
+    return ['Validation failed'];
+  });
+}
 
 export default validateRequest;

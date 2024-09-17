@@ -1,6 +1,6 @@
 import { DataSource } from 'typeorm';
 
-export const PgDataSource = new DataSource({
+export const ProdDataSource = new DataSource({
   type: 'postgres',
   host: 'localhost',
   port: 5432,
@@ -12,8 +12,25 @@ export const PgDataSource = new DataSource({
   synchronize: true,
   logging: true,
   extra: {
-    max: 20, // Maximum number of clients in the pool
-    idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-    connectionTimeoutMillis: 2000, // Return an error after 2 seconds if connection could not be established
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
   },
+});
+
+export const TestDataSource = new DataSource({
+  type: 'postgres',
+  host: 'testLocalhost', //172.17.0.4
+  port: 5433,
+  username: 'postgres',
+  password: 'password',
+  database: 'postgres',
+  entities: [__dirname + '/entities/**/*.entity.ts'],
+  synchronize: true,
+  logging: true,
+  // extra: {
+  //   max: 20,
+  //   idleTimeoutMillis: 30000,
+  //   connectionTimeoutMillis: 2000,
+  // },
 });

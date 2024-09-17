@@ -19,6 +19,8 @@
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.1.1",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
@@ -38,8 +40,7 @@
     "uuid": "^10.0.0",
     "winston": "^3.13.1",
     "winston-daily-rotate-file": "^5.0.0",
-    "winston-telegram": "^2.7.0",
-    "zod": "^3.23.8"
+    "winston-telegram": "^2.7.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.8.0",

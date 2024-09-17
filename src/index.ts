@@ -7,14 +7,12 @@ import contextLogger from './logger/logger';
 import redisClient from './config/redisClient';
 import { requestIdMiddleware } from './middleware/requestId.middleware';
 import requestLogger from './middleware/requestlogger.middleware';
-import { verifyToken } from './middleware/auth.middleware';
-import validateRequest from './middleware/validator.middleware';
-import { userSchema } from './validators/user.schema';
+
 import { helmetMiddleware } from './middleware/security.middleware';
 import { corsMiddleware } from './middleware/cors.middleware';
-import { PgDataSource } from './ormconfig';
-import { loginUser, logoutUser } from './controller/user.controller';
+import { ProdDataSource } from './ormconfig';
 import { getHealthStatus } from './controller/health.controller';
+import authRoute from './routes/auth.route';
 
 process.on('unhandledRejection', (error) => {
   contextLogger.error('Unhandled Rejection at:', error as Error);
@@ -55,19 +53,13 @@ app.get('/', (_req: Request, res: Response) => {
 
 app.use('/api', defaultProxyOptions);
 
-app.post('/login', validateRequest(userSchema), loginUser);
-
-app.post('/logout', verifyToken, logoutUser);
-
-app.get('/protected', verifyToken, (req: Request, res: Response) => {
-  res.send(req?.user);
-});
-
 app.get('/health', getHealthStatus);
+
+app.use('/auth', authRoute);
 
 app.get('/error', (req: Request, _res: Response) => {
   try {
-    throw new Error('This is a test Ferror!');
+    throw new Error('This is a test error!');
   } catch (error: unknown) {
     contextLogger.error('Purposeful Error', error as Error, 'json', {
       requestId: req.requestId,
@@ -95,7 +87,7 @@ const port = process.env.PORT ?? 3000;
 app
   .listen(port, async () => {
     await redisClient.connect();
-    PgDataSource.initialize()
+    ProdDataSource.initialize()
       .then(() => {
         console.log('Data Source has been initialized!');
       })

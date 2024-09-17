@@ -1,30 +1,47 @@
 import request from 'supertest';
 import { app } from '../..';
 import { createClient } from 'redis';
+import { TestDataSource } from '../../ormconfig';
+import { Server } from 'node:http';
 
-const client = createClient();
+const redisClient = createClient();
 
 describe('Auth E2E', () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let server: any;
+  let server: Server;
   let port: number;
 
   beforeAll(async () => {
-    client.on('error', (err) => console.error('Redis error:', err));
-
     port = (Math.random() * 50000 + 10000) | 0;
-    client.connect();
-    server = app.listen(port);
+
+    // Start the server
+    server = app.listen(port, async () => {
+      // Initialize Redis
+      await redisClient.connect();
+      console.log('Connected to Redis');
+
+      // Initialize PostgresSQL
+      await TestDataSource.initialize();
+      console.log('Data Source has been initialized!');
+      console.debug(`Server is running on port ${port}`);
+    });
   });
 
   afterAll(async () => {
-    await client.quit();
+    // Close server
     await new Promise<void>((resolve) => server.close(() => resolve()));
+
+    // Close PostgresSQL connection
+    await TestDataSource.destroy();
+    console.log('PostgresSQL connection closed');
+
+    // Disconnect Redis client
+    await redisClient.quit();
+    console.log('Disconnected from Redis');
   });
 
   it('should allow user registration and return a token', async () => {
     const userCredentials = {
-      userId: 'testUser',
+      userId: '23455',
     };
 
     const res = await request(app)
@@ -33,8 +50,10 @@ describe('Auth E2E', () => {
       .expect('Content-Type', /json/)
       .expect(200);
 
-    expect(res.body).toHaveProperty('token');
-    expect(typeof res.body.token).toBe('string');
+    console.log(res);
+
+    expect(res.body.data).toHaveProperty('token');
+    expect(typeof res.body.data.token).toBe('string');
   });
 
   it('should return 400 for invalid user credentials', async () => {
