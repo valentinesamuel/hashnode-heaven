@@ -1,93 +1,59 @@
 import request from 'supertest';
-import { DataSource } from 'typeorm';
+import { app } from '../..';
 import { createClient } from 'redis';
+import { TestDataSource } from '../../ormconfig';
 import { Server } from 'node:http';
-import path from 'path';
-import { app } from '../..';  // Adjust this import based on your actual app location
 
 const redisClient = createClient();
 
 describe('Auth E2E', () => {
   let server: Server;
   let port: number;
-  let dataSource: DataSource;
-
-  // Increase the timeout for the entire test suite
-  jest.setTimeout(30000); // 30 seconds
 
   beforeAll(async () => {
-    try {
-      port = (Math.random() * 50000 + 10000) | 0;
+    port = (Math.random() * 50000 + 10000) | 0;
 
+    // Start the server
+    server = app.listen(port, async () => {
       // Initialize Redis
       await redisClient.connect();
       console.log('Connected to Redis');
 
-      // Initialize PostgreSQL
-      dataSource = new DataSource({
-        type: 'postgres',
-        host: 'localhost',
-        port: 5433,
-        username: 'postgres',
-        password: 'password',
-        database: 'postgres',
-        entities: [path.join(__dirname, '..', '..', 'entities', '**', '*.entity.{ts,js}')],
-        synchronize: true,
-        logging: true,
-      });
-
-      await dataSource.initialize();
+      // Initialize PostgresSQL
+      await TestDataSource.initialize();
       console.log('Data Source has been initialized!');
-
-      // Start the server
-      await new Promise<void>((resolve, reject) => {
-        server = app.listen(port, () => {
-          console.log(`Server is running on port ${port}`);
-          resolve();
-        });
-        server.on('error', reject);
-      });
-    } catch (error) {
-      console.error('Error during test setup:', error);
-      throw error;
-    }
-  }, 30000); // 30 seconds timeout for beforeAll
+      console.debug(`Server is running on port ${port}`);
+    });
+  });
 
   afterAll(async () => {
-    try {
-      // Close server
-      await new Promise<void>((resolve) => server.close(() => resolve()));
+    // Close server
+    await new Promise<void>((resolve) => server.close(() => resolve()));
 
-      // Close PostgreSQL connection
-      await dataSource.destroy();
-      console.log('PostgreSQL connection closed');
+    // Close PostgresSQL connection
+    await TestDataSource.destroy();
+    console.log('PostgresSQL connection closed');
 
-      // Disconnect Redis client
-      await redisClient.quit();
-      console.log('Disconnected from Redis');
-    } catch (error) {
-      console.error('Error during test teardown:', error);
-      throw error;
-    }
-  }, 30000); // 30 seconds timeout for afterAll
+    // Disconnect Redis client
+    await redisClient.quit();
+    console.log('Disconnected from Redis');
+  });
 
   it('should allow user registration and return a token', async () => {
     const userCredentials = {
-      email: 'test@test.com',
-      username: 'tester',
-      password: 'password',
+      userId: '23455',
     };
 
     const res = await request(app)
-      .post('/auth/signup')
+      .post('/login')
       .send(userCredentials)
       .expect('Content-Type', /json/)
       .expect(200);
 
     console.log(res);
 
-    // expect(res.body.data).toHaveProperty('token');
-    // expect(typeof res.body.data.token).toBe('string');
+    expect(res.body.data).toHaveProperty('token');
+    expect(typeof res.body.data.token).toBe('string');
   });
 
   it('should return 400 for invalid user credentials', async () => {
@@ -97,12 +63,20 @@ describe('Auth E2E', () => {
     };
 
     const res = await request(app)
-      .post('/auth/signup')
+      .post('/login')
       .send(invalidCredentials)
       .expect('Content-Type', /json/)
-      .expect(400);
+      .expect(400); // Expect the status code for invalid input
 
+    // Check that the response contains an error message
     expect(res.body).not.toBe({});
+    expect(res.body).not.toBe({
+      errors: [
+        'Expected string but got undefined on userId',
+        'Unrecognized key(s) in: [ userUnknown ]',
+      ],
+      status: 'error',
+    });
     expect(res.body.errors).toBeDefined();
   });
 });
