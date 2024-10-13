@@ -1,5 +1,3 @@
-// logger/formats.ts
-
 import { format } from 'winston';
 
 // Format for JSON output

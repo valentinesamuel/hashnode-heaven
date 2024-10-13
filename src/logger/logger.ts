@@ -8,26 +8,6 @@ import TelegramLogger, { FormatOptions } from 'winston-telegram';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const fileRotateTransport = new transports.DailyRotateFile({
-  filename: 'logs/combined-%DATE%.log',
-  datePattern: 'YYYY-MM-DD',
-  maxSize: '5k',
-  maxFiles: '6d',
-});
-
-fileRotateTransport.on('new', async (filename) => {
-  console.log(`New log file created: ${filename}`);
-});
-fileRotateTransport.on('rotate', (oldFilename, newFilename) => {
-  console.log(`Log file rotated: ${oldFilename} -> ${newFilename}`);
-});
-fileRotateTransport.on('archive', (zipFilename) => {
-  console.log(`Log files archived: ${zipFilename}`);
-});
-fileRotateTransport.on('logRemoved', (removedFilename) => {
-  console.log(`Log file removed: ${removedFilename}`);
-});
-
 const versionFilePath = path.join(
   __dirname,
   '../',
@@ -48,7 +28,7 @@ class ContextLogger {
     this.logger = createLogger({
       level: 'info',
       format: defaultFormat === 'json' ? jsonFormat : humanReadableFormat,
-      transports: [new transports.Console(), fileRotateTransport],
+      transports: [new transports.Console()],
       exceptionHandlers: [
         new transports.File({ filename: 'logs/exceptions.log' }),
       ],
@@ -69,7 +49,7 @@ class ContextLogger {
     const logger = createLogger({
       level: 'info',
       format: format === 'json' ? jsonFormat : humanReadableFormat,
-      transports: [new transports.Console(), fileRotateTransport],
+      transports: [new transports.Console()],
     });
     logger.add(
       new TelegramLogger({
@@ -88,17 +68,17 @@ class ContextLogger {
             }[info.level] ?? '⚪';
 
           return `
-${levelColor}${levelColor}${levelColor}${levelColor}${levelColor} 
-<b>Level:</b> <code>${info.level}</code>
-<b>Request ID:</b> <code>${info.requestId}</code>
-<b>Message:</b> <code>${info.message}</code>
-<b>FileName:</b> <code>${info.fileName}</code>
-<b>FilePath:</b> <code>${info.filePath}</code>
-<b>Function:</b> <code>${info.functionName}</code>
-<b>Line:</b> <code>${info.lineNumber}</code>
-<b>Build Version:</b> <code>${info.buildVersion}</code>
-<b>Git Commit Hash:</b> <code>${info.gitCommitHash}</code>
-<pre>${JSON.stringify(info, null, 2)}</pre>
+          ${levelColor}${levelColor}${levelColor}${levelColor}${levelColor} 
+          <b>Level:</b> <code>${info.level}</code>
+          <b>Request ID:</b> <code>${info.requestId}</code>
+          <b>Message:</b> <code>${info.message}</code>
+          <b>FileName:</b> <code>${info.fileName}</code>
+          <b>FilePath:</b> <code>${info.filePath}</code>
+          <b>Function:</b> <code>${info.functionName}</code>
+          <b>Line:</b> <code>${info.lineNumber}</code>
+          <b>Build Version:</b> <code>${info.buildVersion}</code>
+          <b>Git Commit Hash:</b> <code>${info.gitCommitHash}</code>
+          <pre>${JSON.stringify(info, null, 2)}</pre>
   `;
         },
       }),

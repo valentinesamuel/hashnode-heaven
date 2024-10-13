@@ -1,0 +1,2 @@
+type Article = {};
+type PublishResult = {};
