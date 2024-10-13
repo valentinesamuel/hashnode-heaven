@@ -3,7 +3,6 @@ import { jsonFormat, humanReadableFormat } from './format';
 import { getCallerInfo } from './util';
 import { readFileSync } from 'fs';
 import * as path from 'path';
-import 'winston-daily-rotate-file';
 import TelegramLogger, { FormatOptions } from 'winston-telegram';
 import dotenv from 'dotenv';
 dotenv.config();
@@ -29,12 +28,8 @@ class ContextLogger {
       level: 'info',
       format: defaultFormat === 'json' ? jsonFormat : humanReadableFormat,
       transports: [new transports.Console()],
-      exceptionHandlers: [
-        new transports.File({ filename: 'logs/exceptions.log' }),
-      ],
-      rejectionHandlers: [
-        new transports.File({ filename: 'logs/rejections.log' }),
-      ],
+      exceptionHandlers: [new transports.Console()],
+      rejectionHandlers: [new transports.Console()],
     });
   }
 
@@ -51,38 +46,38 @@ class ContextLogger {
       format: format === 'json' ? jsonFormat : humanReadableFormat,
       transports: [new transports.Console()],
     });
-    logger.add(
-      new TelegramLogger({
-        token: process.env.TELEGRAM_BOT_TOKEN!,
-        chatId: parseInt(process.env.TELEGRAM_CHAT_ID!),
-        level: level,
-        handleExceptions: true,
-        parseMode: 'HTML',
-        formatMessage: (_params: FormatOptions, info: LogEntry) => {
-          const levelColor =
-            {
-              error: '🔴',
-              warn: '🟠',
-              info: '🟢',
-              debug: '🔵',
-            }[info.level] ?? '⚪';
+  //   logger.add(
+  //     new TelegramLogger({
+  //       token: process.env.TELEGRAM_BOT_TOKEN!,
+  //       chatId: parseInt(process.env.TELEGRAM_CHAT_ID!),
+  //       level: level,
+  //       handleExceptions: true,
+  //       parseMode: 'HTML',
+  //       formatMessage: (_params: FormatOptions, info: LogEntry) => {
+  //         const levelColor =
+  //           {
+  //             error: '🔴',
+  //             warn: '🟠',
+  //             info: '🟢',
+  //             debug: '🔵',
+  //           }[info.level] ?? '⚪';
 
-          return `
-          ${levelColor}${levelColor}${levelColor}${levelColor}${levelColor} 
-          <b>Level:</b> <code>${info.level}</code>
-          <b>Request ID:</b> <code>${info.requestId}</code>
-          <b>Message:</b> <code>${info.message}</code>
-          <b>FileName:</b> <code>${info.fileName}</code>
-          <b>FilePath:</b> <code>${info.filePath}</code>
-          <b>Function:</b> <code>${info.functionName}</code>
-          <b>Line:</b> <code>${info.lineNumber}</code>
-          <b>Build Version:</b> <code>${info.buildVersion}</code>
-          <b>Git Commit Hash:</b> <code>${info.gitCommitHash}</code>
-          <pre>${JSON.stringify(info, null, 2)}</pre>
-  `;
-        },
-      }),
-    );
+  //         return `
+  //         ${levelColor}${levelColor}${levelColor}${levelColor}${levelColor} 
+  //         <b>Level:</b> <code>${info.level}</code>
+  //         <b>Request ID:</b> <code>${info.requestId}</code>
+  //         <b>Message:</b> <code>${info.message}</code>
+  //         <b>FileName:</b> <code>${info.fileName}</code>
+  //         <b>FilePath:</b> <code>${info.filePath}</code>
+  //         <b>Function:</b> <code>${info.functionName}</code>
+  //         <b>Line:</b> <code>${info.lineNumber}</code>
+  //         <b>Build Version:</b> <code>${info.buildVersion}</code>
+  //         <b>Git Commit Hash:</b> <code>${info.gitCommitHash}</code>
+  //         <pre>${JSON.stringify(info, null, 2)}</pre>
+  // `;
+  //       },
+  //     }),
+  //   );
 
     const logObject: Record<string, unknown> = {
       level,
