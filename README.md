@@ -114,27 +114,34 @@ graph TD
 
 The Notion Kanban board is divided into several columns, each representing a stage in the article lifecycle:
 
-1. **To-Do**: Articles that are in the drafting stage.
-2. **In Progress**: Articles currently being written.
-3. **To Be Published**: When articles are ready to go live, they are moved here.
-4. **Published/Live**: Articles that are live on Hashnode are moved here once successfully published.
-5. **Revamped**: Updated articles that need to be pushed live.
-6. **Trash**: Soft-delete articles; they are removed from Hashnode but can be republished later.
+1. **☘️ To Do**: Articles that are in the drafting stage.
+2. **⚒️ In Progress**: Articles currently being written.
+3. **🔍 Vetting**: Articles that need to be checked.
+4. **🧼 Cleanup**: Articles that need to be cleaned up and given final touches
+5. **📬 To Be Published**: When articles are ready to go live, they are moved here.
+6. **🏭 Staging**: Articles that about to be automatically published. Te system moves articles in out of here. The articles fro mhere majorly comes in from *📬 To Be Published* and *🌟 Revamped*.
+7. **🎉 Live**: Articles that are live on Hashnode are moved here and updated with the hashnode article ID once successfully published.
+8. **♻️ To Be Updated**: Updated articles that were live and need to be updated.
+9. **🌟 Revamped**: Updated articles that have been updated and is about to go live
+10. **🗑️ Trash**: Soft-delete articles; they are removed from Hashnode but can be republished later.
+
+> **NOTE**: The columns can be customized based on your workflow.
 
 ### Publishing Process
 
 - The backend continuously polls the Notion board.
-- When an article is found in the "To Be Published" column, the application publishes the article on Hashnode.
-- Once the article is published, the article metadata is updated on Notion with the `articleId` from Hashnode, and the page is moved to the "Published/Live" column.
+- When an article is found in the "📬 To Be Published" column, the application publishes the article on Hashnode.
+- Once the article is published, the article metadata is updated on Notion with the `articleId` from Hashnode, and the page is moved to the "🎉 Live" column.
 
 ### Updating an Article
 
-- Moving an article to the "Revamped" column triggers an update process.
-- The system updates the article on Hashnode using the stored `articleId` and moves the article back to the "Published/Live" column after a successful update.
+- A live article that needs to be updated is moved to the "♻️ To Be Updated" column.
+- Moving an article from the "♻️ To Be Updated" column to the "🌟 Revamped" column triggers an update process.
+- The system updates the article on Hashnode using the stored `articleId` and moves the article back to the "🎉 Live" column after a successful update.
 
 ### Soft Deletion
 
-- Articles in the "Trash" column are not fully deleted from Hashnode. Instead, they are marked as "deleted" and can be republished later by moving them back to the appropriate column.
+- Articles in the "🗑️ Trash" column are not fully deleted from Hashnode. Instead, they are marked as "deleted" and can be republished later by moving them back to the appropriate column.
 
 ## Database Design
 
@@ -142,6 +149,10 @@ The Notion Kanban board is divided into several columns, each representing a sta
 
   - `articleId`: Unique ID of the article on Hashnode.
   - `notionPageId`: Unique ID of the Notion page.
+  - `title`: Title of the article.
+  - `hasnnodeSlug`: Unique slug of the article on Hashnode.
+  - `hashnodeUrl`: URL of the article on Hashnode.
+  - `
   - `status`: Current status of the article (e.g., Published, Revamped, Deleted).
 
 - **Redis (Upstash)** caches Notion API responses to minimize rate-limiting issues.

@@ -3,10 +3,10 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export const AppConfig = {
-  notionToken: process.env.NOTION_TOKEN,
+  notionToken: process.env.NOTION_INTEGRATION_TOKEN,
   hashnodeToken: process.env.HASHNODE_TOKEN,
   notionDatabaseId: process.env.NOTION_DATABASE_ID,
   redisUrl: process.env.UPSTASH_REDIS_URL,
-  pollingInterval: 30000, // Poll every 30 seconds
-  dbPath: '../data.sqlite',
+  pollingInterval: process.env.POLLING_INTERVAL,
+  databaseUrl: process.env.DATABASE_URL,
 };
