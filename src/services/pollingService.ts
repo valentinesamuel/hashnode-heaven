@@ -8,13 +8,26 @@ const redisCacheService = new RedisCacheService();
 
 export const pollingService = async () => {
   const articles = await notionService.getArticlesInColumn('To Be Published');
+
+  if (!articles) {
+    return;
+  }
+
   for (const article of articles) {
-    if (!cache.has(article.id)) {
-      const result = await hashnodeService.publishArticle(article);
-      if (result.success) {
-        await notionService.updateArticleStatus(article.id, 'Published');
-        cache.set(article.id, true); // Prevent re-processing
-      }
+    const articleId = article.id;
+    const articleTitle = article.properties.Name.title[0].text.content;
+    const articleUrl = article.properties.URL.url;
+
+    const articleData = await hashnodeService.getArticleBySlug(articleUrl);
+
+    if (!articleData) {
+      continue;
     }
+
+    const articleContent = articleData.contentMarkdown;
+
+    await redisCacheService.setCache(articleId, articleContent);
+
+    await notionService.updateArticleStatus(articleId, 'Published');
   }
 };

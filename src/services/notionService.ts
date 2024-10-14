@@ -1,10 +1,19 @@
+import { NotionRepository } from './../repositories/notion.repository';
+import { QueryDatabaseResponse } from '@notionhq/client/build/src/api-endpoints';
+import { NotionInterface } from '../repositories/interfaces/notion.interface';
+
 export class NotionService {
-  async getArticlesInColumn(columnName: string): Promise<Article[]> {
-    // Fetch articles from Notion
-    return [{ id: '1', title: 'My First Article' }];
+  private readonly notionRepository: NotionInterface;
+
+  constructor() {
+    this.notionRepository = new NotionRepository();
   }
 
-  async updateArticleStatus(articleId: string, status: string) {
-    // Update article status in Notion
+  async getArticlesToBePublished(
+    columnName: string,
+  ): Promise<QueryDatabaseResponse[] | null> {
+    return await this.notionRepository.getColumnArticlesFromDatabaseByStatus(
+      columnName,
+    );
   }
 }
