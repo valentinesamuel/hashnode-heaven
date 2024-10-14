@@ -1,8 +1,9 @@
+import { AppConfig } from './../../src/config/config';
 import { drizzle, PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schemas from './schemas';
 
-const connectionString = process.env.DATABASE_URL || '';
+const connectionString = AppConfig.databaseUrl || '';
 
 export type PGDatabase = PostgresJsDatabase<typeof schemas> & {
   $client: postgres.Sql;
