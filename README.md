@@ -166,6 +166,8 @@ The Notion Kanban board is divided into several columns, each representing a sta
 
 - **Notion**: 3 requests per second.
 - **Hashnode**: 2000 requests per minute.
+  - Query users are allowed to send up to 20k requests per minute.
+  - Mutations users can send up to 500 requests per per minute.
 
 The application respects these limits and dynamically adjusts the polling frequency to avoid API throttling.
 
