@@ -3,7 +3,7 @@ import { QueryDatabaseResponse } from '@notionhq/client/build/src/api-endpoints'
 import { NotionInterface } from '../repositories/interfaces/notion.interface';
 
 export class NotionService {
-  private readonly notionRepository: NotionInterface;
+  private readonly notionRepository;
 
   constructor() {
     this.notionRepository = new NotionRepository();
@@ -11,9 +11,13 @@ export class NotionService {
 
   async getArticlesToBePublished(
     columnName: string,
-  ): Promise<QueryDatabaseResponse[] | null> {
+  ) {
     return await this.notionRepository.getColumnArticlesFromDatabaseByStatus(
       columnName,
     );
+  }
+
+  async getArticleById(pageId: string) {
+    return await this.notionRepository.notionToMarkdown(pageId, 'article.md');
   }
 }
