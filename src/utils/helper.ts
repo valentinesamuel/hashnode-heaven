@@ -117,7 +117,7 @@ export class NotionHelper {
     return path.reduce((acc, part) => acc && acc[part], obj) ?? defaultValue;
   }
 
-  processArticleProperties(articles: any[]) {
+  processArticleProperties(article: any) {
     let processedProperties: {
       articleId: any;
       status: any;
@@ -136,112 +136,110 @@ export class NotionHelper {
       cover: { expiryTime: string; url: string };
       title: any;
       isDeleted: any;
-    }[] = [];
+    };
 
-    articles.forEach((article) => {
-      console.log(article);
-      let cover = {
-        expiryTime: '',
-        url: '',
-      };
-      if (article.cover) {
-        if (article.cover.type === 'external') {
-          cover.url = article.cover.external.url;
-        } else if (article.cover.type === 'file') {
-          cover.url = article.cover.file.url;
-          cover.expiryTime = article.cover.file.expiry_time;
-        }
+    let cover = {
+      expiryTime: '',
+      url: '',
+    };
+
+    if (article.cover) {
+      if (article.cover.type === 'external') {
+        cover.url = article.cover.external.url;
+      } else if (article.cover.type === 'file') {
+        cover.url = article.cover.file.url;
+        cover.expiryTime = article.cover.file.expiry_time;
       }
+    }
 
-      const tags: string[] = [];
-      article.properties['Tags'].multi_select.forEach((tag: { name: string }) =>
-        tags.push(tag.name),
-      );
+    const tags: string[] = [];
+    article.properties['Tags'].multi_select.forEach((tag: { name: string }) =>
+      tags.push(tag.name),
+    );
 
-      const properties = {
-        articleId: this.getProperty(article, ['id']),
-        status: this.getProperty(article, [
+    const properties = {
+      articleId: this.getProperty(article, ['id']),
+      status: this.getProperty(article, [
+        'properties',
+        'Status',
+        'select',
+        'name',
+      ]),
+      lastPublishedAt: this.getProperty(article, [
+        'properties',
+        'Last Publication Date',
+        'date',
+        'start',
+      ]),
+      firstPublishedAt: this.getProperty(article, [
+        'properties',
+        'First Publication Date',
+        'date',
+        'start',
+      ]),
+      readTime: this.getProperty(article, [
+        'properties',
+        'Read Time',
+        'number',
+      ]),
+      slug: this.getProperty(
+        article,
+        ['properties', 'Slug', 'rich_text', '0', 'plain_text'],
+        '',
+      ),
+      tags,
+      url: this.getProperty(article, ['properties', 'URL', 'url']),
+      featured: this.getProperty(article, [
+        'properties',
+        'Featured',
+        'select',
+        'name',
+      ]),
+      hashnodeId: this.getProperty(article, [
+        'properties',
+        'Hashnode Blog ID',
+        'rich_text',
+        '0',
+        'plain_text',
+      ]),
+      featuredAt: this.getProperty(article, [
+        'properties',
+        'Feature Date',
+        'date',
+        'start',
+      ]),
+      deletedAt: this.getProperty(article, [
+        'properties',
+        'Deleted At',
+        'date',
+        'start',
+      ]),
+      createdAt:
+        this.getProperty(article, ['created_time']) ||
+        this.getProperty(article, [
           'properties',
-          'Status',
-          'select',
-          'name',
+          'Created time',
+          'created_time',
         ]),
-        lastPublishedAt: this.getProperty(article, [
+      lastEditedAt:
+        this.getProperty(article, ['last_edited_time']) ||
+        this.getProperty(article, [
           'properties',
-          'Last Publication Date',
-          'date',
-          'start',
+          'Last edited time',
+          'last_edited_time',
         ]),
-        firstPublishedAt: this.getProperty(article, [
-          'properties',
-          'First Publication Date',
-          'date',
-          'start',
-        ]),
-        readTime: this.getProperty(article, [
-          'properties',
-          'Read Time',
-          'number',
-        ]),
-        slug: this.getProperty(
-          article,
-          ['properties', 'Slug', 'rich_text', '0', 'plain_text'],
-          '',
-        ),
-        tags,
-        url: this.getProperty(article, ['properties', 'URL', 'url']),
-        featured: this.getProperty(article, [
-          'properties',
-          'Featured',
-          'select',
-          'name',
-        ]),
-        hashnodeId: this.getProperty(article, [
-          'properties',
-          'Hashnode Blog ID',
-          'rich_text',
-          '0',
-          'plain_text',
-        ]),
-        featuredAt: this.getProperty(article, [
-          'properties',
-          'Feature Date',
-          'date',
-          'start',
-        ]),
-        deletedAt: this.getProperty(article, [
-          'properties',
-          'Deleted At',
-          'date',
-          'start',
-        ]),
-        createdAt:
-          this.getProperty(article, ['created_time']) ||
-          this.getProperty(article, [
-            'properties',
-            'Created time',
-            'created_time',
-          ]),
-        lastEditedAt:
-          this.getProperty(article, ['last_edited_time']) ||
-          this.getProperty(article, [
-            'properties',
-            'Last edited time',
-            'last_edited_time',
-          ]),
-        cover,
-        title: this.getProperty(article, [
-          'properties',
-          'Name',
-          'title',
-          '0',
-          'text',
-          'content',
-        ]),
-        isDeleted: this.getProperty(article, ['in_trash']),
-      };
-      processedProperties.push(properties);
-    });
-    return processedProperties;
+      cover,
+      title: this.getProperty(article, [
+        'properties',
+        'Name',
+        'title',
+        '0',
+        'text',
+        'content',
+      ]),
+      isDeleted: this.getProperty(article, ['in_trash']),
+    };
+
+    return properties;
   }
 }

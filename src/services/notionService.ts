@@ -38,8 +38,6 @@ export class NotionService {
     enableTableOfContent: any;
   }) {
     try {
-      // const articleContent = this.getArticleById(articleId);
-
       const articleTags = tags.map((tag) => ({
         name: tag,
       }));
