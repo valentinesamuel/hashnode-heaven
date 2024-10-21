@@ -1,34 +1,37 @@
-import { AppConfig } from "../config/config";
+import { AppConfig } from '../config/config';
 
-export async function callHashnodeAPI(query: string, variables: Record<string, any>) {
-    const url = 'https://api.hashnode.com/';
+export async function callHashnodeAPI(
+  query: string,
+  input: Record<string, any>,
+) {
+  const url = 'https://gql.hashnode.com/';
 
-    const requestBody = {
-        query,
-        variables,
-    };
+  const requestBody = {
+    query,
+    variables: {
+      input,
+    },
+  };
 
-    try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': AppConfig.hashnodeToken
-            },
-            body: JSON.stringify(requestBody),
-        });
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: AppConfig.hashnodeToken,
+      },
+      body: JSON.stringify(requestBody),
+    });
 
-        if (!response.ok) {
-            // Handle HTTP errors
-            const errorDetails = await response.json();
-            throw new Error(`Error: ${response.status} ${errorDetails.message || errorDetails}`);
-        }
 
-        const data = await response.json();
-        return data.data; // Return the data part of the response
-
-    } catch (error) {
-        console.error('Error calling Hashnode API:', error);
-        throw error; // Rethrow the error for further handling if needed
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Error: ${response.status} - ${errorText}`);
     }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error calling Hashnode API:', error);
+    throw error; // Rethrow the error for further handling if needed
+  }
 }

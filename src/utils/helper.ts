@@ -119,23 +119,24 @@ export class NotionHelper {
 
   processArticleProperties(article: any) {
     let processedProperties: {
-      articleId: any;
-      status: any;
-      lastPublishedAt: any;
-      firstPublishedAt: any;
-      readTime: any;
-      slug: any;
-      tags: any[];
-      url: any;
-      featured: any;
-      hashnodeId: any;
-      featuredAt: any;
-      deletedAt: any;
-      createdAt: any;
-      lastEditedAt: any;
+      articleId: string;
+      status: string;
+      lastPublishedAt: string;
+      firstPublishedAt: string;
+      readTime: string;
+      slug: string;
+      tags: string[];
+      url: string;
+      featured: string;
+      hashnodeId: string;
+      featuredAt: string;
+      deletedAt: string;
+      createdAt: string;
+      lastEditedAt: string;
       cover: { expiryTime: string; url: string };
-      title: any;
-      isDeleted: any;
+      title: string;
+      isDeleted: boolean;
+      subTitle: string;
     };
 
     let cover = {
@@ -188,7 +189,7 @@ export class NotionHelper {
         '',
       ),
       tags,
-      url: this.getProperty(article, ['properties', 'URL', 'url']),
+      url: this.getProperty(article, ['properties', 'URL', 'url'], ''),
       featured: this.getProperty(article, [
         'properties',
         'Featured',
@@ -236,6 +237,13 @@ export class NotionHelper {
         '0',
         'text',
         'content',
+      ]),
+      subTitle: this.getProperty(article, [
+        'properties',
+        'Subtitle',
+        'rich_text',
+        '0',
+        'plain_text',
       ]),
       isDeleted: this.getProperty(article, ['in_trash']),
     };

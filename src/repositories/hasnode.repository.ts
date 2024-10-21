@@ -1,8 +1,21 @@
 import axios, { AxiosInstance } from 'axios';
 import { AppConfig } from '../config/config';
-import { CreateDraftInput, CreateDraftPayload, Post, PublishPostInput, PublishPostPayload, RemovePostInput, RemovePostPayload, RestorePostInput, RestorePostPayload, UpdatePostInput, UpdatePostPayload } from '../utils/hashnode.types';
+import {
+  CreateDraftInput,
+  CreateDraftPayload,
+  Post,
+  PublishPostInput,
+  PublishPostPayload,
+  RemovePostInput,
+  RemovePostPayload,
+  RestorePostInput,
+  RestorePostPayload,
+  UpdatePostInput,
+  UpdatePostPayload,
+} from '../utils/hashnode.types';
 import { PUBLISH_POST } from './queries';
 import { HashnodeInterface } from './interfaces/hashnode.interface';
+import { callHashnodeAPI } from '../utils/fetch';
 
 export class HashnodeRepository implements HashnodeInterface {
   private readonly hashnodeInstance: AxiosInstance;
@@ -16,40 +29,10 @@ export class HashnodeRepository implements HashnodeInterface {
   }
 
   async publishPost(input: PublishPostInput): Promise<PublishPostPayload> {
+    const response = await callHashnodeAPI(PUBLISH_POST, input);
 
-    const query = PUBLISH_POST;
-
-
-
-    const response = await fetch('https://gql.hashnode.com/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': '6f9de4a1-28e7-4cba-8523-9cef9fd8a2aa',
-      },
-      body: JSON.stringify({
-        query,
-        variables: {
-          input
-        },
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Error: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json();
-    console.log(data);
-    return data;
-  };
-
-
-
-  // publishPost(input)
-  //   .then(data => console.log(data))
-  //   .catch (error => console.error('Error processing Notion to Markdown:', error));
+    return response.data;
+  }
 
   async updatePost(input: UpdatePostInput): Promise<UpdatePostPayload> {
     throw new Error('Method not implemented.');
@@ -74,5 +57,4 @@ export class HashnodeRepository implements HashnodeInterface {
   async getPostById(id: string): Promise<Post> {
     throw new Error('Method not implemented.');
   }
-
 }

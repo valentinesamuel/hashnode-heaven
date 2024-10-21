@@ -53,25 +53,67 @@ export class NotionRepository {
     },
   ) {
     try {
-      await this.notion.pages.update({
+      const res = await this.notion.pages.update({
         page_id: pageId,
         properties: {
-          'First Published At': {
+          'First Publication Date': {
             // @ts-ignore
             type: 'date',
             date: {
               start: data.first_published_at,
             },
           },
-          'Last Published At': {
+          'Last Publication Date': {
             // @ts-ignore
             type: 'date',
             date: {
               start: data.last_published_at,
             },
           },
+          'Read Time': {
+            // @ts-ignore
+            type: 'rich_text',
+            rich_text: [
+              {
+                type: 'text',
+                text: {
+                  content: data.readTime,
+                },
+              },
+            ],
+          },
+          Slug: {
+            // @ts-ignore
+            type: 'rich_text',
+            rich_text: [
+              {
+                type: 'text',
+                text: {
+                  content: data.slug,
+                },
+              },
+            ],
+          },
+          Status: {
+            // @ts-ignore
+            type: 'select',
+            select: {
+              name: data.status,
+            },
+          },
+          Tags: {
+            // @ts-ignore
+            type: 'multi_select',
+            multi_select: data.tags.map((tag) => ({ name: tag })),
+          },
+          URL: {
+            // @ts-ignore
+            type: 'url',
+            url: data.url,
+          },
         },
       });
+      return res;
     } catch (error) {
       console.error(error);
     }

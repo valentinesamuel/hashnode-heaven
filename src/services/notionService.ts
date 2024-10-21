@@ -29,20 +29,30 @@ export class NotionService {
     title,
     subtitle,
     tags,
+    coverImageUrl,
     enableTableOfContent,
   }: {
     fileContent: string;
     title: string;
     subtitle: string;
     tags: string[];
+    coverImageUrl: string;
     enableTableOfContent: any;
   }) {
     try {
+      console.log('Publishing article to Hashnode...');
+      console.log('++++++++++++++++++++++++\n\n\n\n\n')
+      console.log('fileContent:', coverImageUrl);
+      console.log('++++++++++++++++++++++++\n\n\n\n\n')
       const articleTags = tags.map((tag) => ({
         name: tag,
       }));
       return await this.hashnodeService.publishPost({
         contentMarkdown: fileContent,
+        coverImageOptions: {
+          coverImageURL: encodeURI(coverImageUrl),
+        },
+        
         title,
         subtitle,
         tags: articleTags,
@@ -52,15 +62,26 @@ export class NotionService {
         publicationId: AppConfig.hashnodePublicationId,
       });
     } catch (error) {
-      this.contextLogger.error(
-        'Error publishing article to Hashnode:',
-        error as Error,
-      );
+      // this.contextLogger.error(
+      //   'Error publishing article to Hashnode:',
+      //   error as Error,
+      // );
       throw error;
     }
   }
 
-  updateNotionBlogPorperties(pageId: string, properties: any) {
+  updateNotionBlogPorperties(
+    pageId: string,
+    properties: {
+      first_published_at?: string;
+      last_published_at?: string;
+      readTime: string;
+      slug: string;
+      status: string;
+      tags: string[];
+      url: string;
+    },
+  ) {
     return this.notionRepository.updatePageProperties(pageId, properties);
   }
 }
