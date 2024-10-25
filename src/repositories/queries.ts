@@ -33,6 +33,7 @@ export const PUBLISH_POST = `
         featured
         publishedAt
         updatedAt
+        readTimeInMinutes
     }
   }
 }

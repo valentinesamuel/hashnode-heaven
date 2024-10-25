@@ -2,6 +2,7 @@ import { NotionRepository } from '../repositories/notion.repository';
 import { HashnodeService } from './hashnodeService';
 import { AppConfig } from '../config/config';
 import Logger from '../logger/logger';
+import { convertToSlug } from '../utils/fetch';
 
 export class NotionService {
   private readonly notionRepository;
@@ -15,6 +16,7 @@ export class NotionService {
   }
 
   async getArticlesToBePublished(columnName: string) {
+    this.contextLogger.info('Fetching articles to be published');
     return await this.notionRepository.getColumnArticlesFromDatabaseByStatus(
       columnName,
     );
@@ -39,20 +41,17 @@ export class NotionService {
     coverImageUrl: string;
     enableTableOfContent: any;
   }) {
+    this.contextLogger.info('Publishing article to Hashnode');
     try {
-      console.log('Publishing article to Hashnode...');
-      console.log('++++++++++++++++++++++++\n\n\n\n\n')
-      console.log('fileContent:', coverImageUrl);
-      console.log('++++++++++++++++++++++++\n\n\n\n\n')
       const articleTags = tags.map((tag) => ({
         name: tag,
+        slug: convertToSlug(tag),
       }));
-      return await this.hashnodeService.publishPost({
+      const publishedPost = await this.hashnodeService.publishPost({
         contentMarkdown: fileContent,
         coverImageOptions: {
           coverImageURL: encodeURI(coverImageUrl),
         },
-        
         title,
         subtitle,
         tags: articleTags,
@@ -61,11 +60,13 @@ export class NotionService {
         },
         publicationId: AppConfig.hashnodePublicationId,
       });
+      return publishedPost;
     } catch (error) {
-      // this.contextLogger.error(
-      //   'Error publishing article to Hashnode:',
-      //   error as Error,
-      // );
+      this.contextLogger.error(
+        'Error publishing article to Hashnode:',
+        error as Error,
+        'human'
+      );
       throw error;
     }
   }
@@ -82,6 +83,7 @@ export class NotionService {
       url: string;
     },
   ) {
+    this.contextLogger.info(`Updating Notion blog properties at ${properties.url}`);
     return this.notionRepository.updatePageProperties(pageId, properties);
   }
 }

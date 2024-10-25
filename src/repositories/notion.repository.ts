@@ -1,14 +1,6 @@
-import {
-  DatabaseObjectResponse,
-  GetPageResponse,
-  PageObjectResponse,
-  PartialDatabaseObjectResponse,
-  PartialPageObjectResponse,
-  QueryDatabaseResponse,
-} from '@notionhq/client/build/src/api-endpoints';
+
 import { AppConfig } from '../config/config';
 import { Client, collectPaginatedAPI, LogLevel } from '@notionhq/client';
-import * as fs from 'fs';
 import { NotionHelper } from '../utils/helper';
 
 export class NotionRepository {

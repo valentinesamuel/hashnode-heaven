@@ -23,7 +23,6 @@ export async function callHashnodeAPI(
       body: JSON.stringify(requestBody),
     });
 
-
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`Error: ${response.status} - ${errorText}`);
@@ -32,6 +31,17 @@ export async function callHashnodeAPI(
     return await response.json();
   } catch (error) {
     console.error('Error calling Hashnode API:', error);
-    throw error; // Rethrow the error for further handling if needed
+    throw error;
   }
+}
+
+
+export function convertToSlug(input: string): string {
+  return input
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .replace(/-+/g, '-')
+    .substring(0, 250)
+    .replace(/--deleted$/, '');
 }

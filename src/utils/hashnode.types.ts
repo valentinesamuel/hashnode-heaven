@@ -5232,6 +5232,7 @@ export type PublishPostInput = {
 };
 
 export type PublishPostPayload = {
+  [x: string]: any;
   __typename?: 'PublishPostPayload';
   post?: Maybe<Post>;
 };
