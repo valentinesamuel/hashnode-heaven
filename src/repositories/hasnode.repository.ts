@@ -14,8 +14,8 @@ import {
   UpdatePostPayload,
 } from '../utils/hashnode.types';
 import { PUBLISH_POST } from './queries';
-import { HashnodeInterface } from './interfaces/hashnode.interface';
 import { callHashnodeAPI } from '../utils/fetch';
+import { HashnodeInterface } from './interfaces/hashnode.interface';
 
 export class HashnodeRepository implements HashnodeInterface {
   private readonly hashnodeInstance: AxiosInstance;

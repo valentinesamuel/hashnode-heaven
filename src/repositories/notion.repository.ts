@@ -1,8 +1,30 @@
 import { Client, collectPaginatedAPI, LogLevel } from "@notionhq/client";
-import { NotionHelper } from "../utils/helper";
 import { AppConfig } from "../config/config";
+import { NotionHelper } from "./notionHelper.repository";
+import { NotionInterface } from "./interfaces/notion.interface";
 
-export class NotionRepository {
+export type NotionArticleProperties = {
+  articleId: any;
+  status: any;
+  lastPublishedAt: any;
+  firstPublishedAt: any;
+  readTime: any;
+  slug: any;
+  tags: string[];
+  url: any;
+  featured: any;
+  hashnodeId: any;
+  featuredAt: any;
+  deletedAt: any;
+  createdAt: any;
+  lastEditedAt: any;
+  cover: { expiryTime: string; url: string };
+  title: any;
+  subTitle: any;
+  isDeleted: any;
+} 
+
+export class NotionRepository implements NotionInterface {
   private readonly notion: Client;
   private readonly DATABASE_ID = AppConfig.notionDatabaseId;
   private readonly notionHelper: NotionHelper;
@@ -74,7 +96,6 @@ export class NotionRepository {
   }
 
   processArticleProperties(article: any) {
-
     let cover = {
       expiryTime: '',
       url: '',
@@ -94,7 +115,7 @@ export class NotionRepository {
       tags.push(tag.name),
     );
 
-    const properties = {
+    const properties:NotionArticleProperties= {
       articleId: this.getProperty(article, ['id']),
       status: this.getProperty(article, [
         'properties',

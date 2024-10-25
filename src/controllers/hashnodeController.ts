@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import { NotionService } from "../services/notionService";
-import { NotionHelper } from "../utils/helper";
 import Logger from "../logger/logger";
 
 export type Article = {
