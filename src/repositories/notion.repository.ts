@@ -70,7 +70,7 @@ export class NotionRepository {
     }
   }
   private getProperty(obj: any, path: string[], defaultValue: any = null): any {
-    return path.reduce((acc, part) => acc && acc[part], obj) ?? defaultValue;
+    return path.reduce((acc, part) => acc?.[part], obj) ?? defaultValue;
   }
 
   processArticleProperties(article: any) {

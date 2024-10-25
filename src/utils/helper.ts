@@ -1,10 +1,10 @@
 import * as fs from 'fs';
-import { Client, isFullBlock } from '@notionhq/client'; 
+import { Client, isFullBlock } from '@notionhq/client';
 import { BlockObjectResponse } from '@notionhq/client/build/src/api-endpoints';
 
 export class NotionHelper {
-  private readonly rateLimit = 3; // queries per second
-  private delayBetweenRequests = 1000 / this.rateLimit; // ms
+  private readonly rateLimit = 3;
+  private delayBetweenRequests = 1000 / this.rateLimit;
 
   constructor(private notion: Client) { }
 
@@ -19,7 +19,6 @@ export class NotionHelper {
     return fileContent;
   }
 
-  // Recursively fetch blocks with delay to respect rate limit
   private async fetchBlocksRecursively(blockId: string): Promise<BlockObjectResponse[]> {
     let blocks = await this.notion.blocks.children.list({ block_id: blockId });
     const allBlocks = [...blocks.results];
@@ -37,7 +36,6 @@ export class NotionHelper {
     return allBlocks as BlockObjectResponse[];
   }
 
-  // Generates markdown for nested blocks
   private async generateMarkdown(blocks: BlockObjectResponse[], depth = 0): Promise<string> {
     const lines: string[] = [];
     for (const block of blocks) {
@@ -47,7 +45,7 @@ export class NotionHelper {
     return lines.join('\n');
   }
 
-  // Converts each block to Markdown with recursive structure for nested lists
+
   private async blockToMarkdown(block: BlockObjectResponse, depth: number = 0): Promise<string> {
     const indentation = '  '.repeat(depth);
     let markdown = '';
