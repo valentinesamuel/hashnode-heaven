@@ -1,18 +1,18 @@
-
-import { AppConfig } from '../config/config';
-import { Client, collectPaginatedAPI, LogLevel } from '@notionhq/client';
-import { NotionHelper } from '../utils/helper';
+import { Client, collectPaginatedAPI, LogLevel } from "@notionhq/client";
+import { NotionHelper } from "../utils/helper";
+import { AppConfig } from "../config/config";
 
 export class NotionRepository {
   private readonly notion: Client;
   private readonly DATABASE_ID = AppConfig.notionDatabaseId;
-  private readonly notionHelper = new NotionHelper();
+  private readonly notionHelper: NotionHelper;
 
   constructor() {
     this.notion = new Client({
       auth: AppConfig.notionToken,
       logLevel: LogLevel.DEBUG,
     });
+    this.notionHelper = new NotionHelper(this.notion);
   }
 
   async getColumnArticlesFromDatabaseByStatus(columnName: string) {
@@ -32,77 +32,18 @@ export class NotionRepository {
     }
   }
 
-  async updatePageProperties(
-    pageId: string,
-    data: {
-      first_published_at?: string;
-      last_published_at?: string;
-      readTime: string;
-      slug: string;
-      status: string;
-      tags: string[];
-      url: string;
-    },
-  ) {
+  async updatePageProperties(pageId: string, data: Record<string, any>) {
     try {
       const res = await this.notion.pages.update({
         page_id: pageId,
         properties: {
-          'First Publication Date': {
-            // @ts-ignore
-            type: 'date',
-            date: {
-              start: data.first_published_at,
-            },
-          },
-          'Last Publication Date': {
-            // @ts-ignore
-            type: 'date',
-            date: {
-              start: data.last_published_at,
-            },
-          },
-          'Read Time': {
-            // @ts-ignore
-            type: 'rich_text',
-            rich_text: [
-              {
-                type: 'text',
-                text: {
-                  content: data.readTime,
-                },
-              },
-            ],
-          },
-          Slug: {
-            // @ts-ignore
-            type: 'rich_text',
-            rich_text: [
-              {
-                type: 'text',
-                text: {
-                  content: data.slug,
-                },
-              },
-            ],
-          },
-          Status: {
-            // @ts-ignore
-            type: 'select',
-            select: {
-              name: data.status,
-            },
-          },
-          Tags: {
-            // @ts-ignore
-            type: 'multi_select',
-            multi_select: data.tags.map((tag) => ({ name: tag })),
-          },
-          URL: {
-            // @ts-ignore
-            type: 'url',
-            url: data.url,
-          },
+          'First Publication Date': { date: { start: data.first_published_at } },
+          'Last Publication Date': { date: { start: data.last_published_at } },
+          'Read Time': { rich_text: [{ text: { content: data.readTime } }] },
+          Slug: { rich_text: [{ text: { content: data.slug } }] },
+          Status: { select: { name: data.status } },
+          Tags: { multi_select: data.tags.map((tag: string) => ({ name: tag })) },
+          URL: { url: data.url },
         },
       });
       return res;
@@ -112,32 +53,137 @@ export class NotionRepository {
   }
 
   async getPageContent(pageId: string) {
-    let blocks: any[] = [];
-    let cursor;
-
-    while (true) {
-      const { results, next_cursor } = await this.notion.blocks.children.list({
-        block_id: pageId,
-        start_cursor: cursor,
-      });
-
-      blocks = blocks.concat(results);
-
-      if (!next_cursor) break;
-      cursor = next_cursor;
+    try {
+      return await this.notionHelper.convertNotionBlocksToMarkdown(pageId);
+    } catch (error) {
+      console.error('Error fetching page content:', error);
+      return null;
     }
-
-    return this.notionHelper.convertNotionBlocksToMarkdown(blocks);
   }
 
   async getPageProperties(pageId: string) {
     try {
-      const page = await this.notion.pages.retrieve({ page_id: pageId });
-      console.log(page);
-      return page;
+      return await this.notion.pages.retrieve({ page_id: pageId });
     } catch (error) {
       console.error(error);
       return null;
     }
+  }
+  private getProperty(obj: any, path: string[], defaultValue: any = null): any {
+    return path.reduce((acc, part) => acc && acc[part], obj) ?? defaultValue;
+  }
+
+  processArticleProperties(article: any) {
+
+    let cover = {
+      expiryTime: '',
+      url: '',
+    };
+
+    if (article.cover) {
+      if (article.cover.type === 'external') {
+        cover.url = article.cover.external.url;
+      } else if (article.cover.type === 'file') {
+        cover.url = article.cover.file.url;
+        cover.expiryTime = article.cover.file.expiry_time;
+      }
+    }
+
+    const tags: string[] = [];
+    article.properties['Tags'].multi_select.forEach((tag: { name: string }) =>
+      tags.push(tag.name),
+    );
+
+    const properties = {
+      articleId: this.getProperty(article, ['id']),
+      status: this.getProperty(article, [
+        'properties',
+        'Status',
+        'select',
+        'name',
+      ]),
+      lastPublishedAt: this.getProperty(article, [
+        'properties',
+        'Last Publication Date',
+        'date',
+        'start',
+      ]),
+      firstPublishedAt: this.getProperty(article, [
+        'properties',
+        'First Publication Date',
+        'date',
+        'start',
+      ]),
+      readTime: this.getProperty(article, [
+        'properties',
+        'Read Time',
+        'number',
+      ]),
+      slug: this.getProperty(
+        article,
+        ['properties', 'Slug', 'rich_text', '0', 'plain_text'],
+        '',
+      ),
+      tags,
+      url: this.getProperty(article, ['properties', 'URL', 'url'], ''),
+      featured: this.getProperty(article, [
+        'properties',
+        'Featured',
+        'select',
+        'name',
+      ]),
+      hashnodeId: this.getProperty(article, [
+        'properties',
+        'Hashnode Blog ID',
+        'rich_text',
+        '0',
+        'plain_text',
+      ]),
+      featuredAt: this.getProperty(article, [
+        'properties',
+        'Feature Date',
+        'date',
+        'start',
+      ]),
+      deletedAt: this.getProperty(article, [
+        'properties',
+        'Deleted At',
+        'date',
+        'start',
+      ]),
+      createdAt:
+        this.getProperty(article, ['created_time']) ||
+        this.getProperty(article, [
+          'properties',
+          'Created time',
+          'created_time',
+        ]),
+      lastEditedAt:
+        this.getProperty(article, ['last_edited_time']) ||
+        this.getProperty(article, [
+          'properties',
+          'Last edited time',
+          'last_edited_time',
+        ]),
+      cover,
+      title: this.getProperty(article, [
+        'properties',
+        'Name',
+        'title',
+        '0',
+        'text',
+        'content',
+      ]),
+      subTitle: this.getProperty(article, [
+        'properties',
+        'Subtitle',
+        'rich_text',
+        '0',
+        'plain_text',
+      ]),
+      isDeleted: this.getProperty(article, ['in_trash']),
+    };
+
+    return properties;
   }
 }

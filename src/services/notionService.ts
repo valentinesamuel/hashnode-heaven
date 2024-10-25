@@ -3,6 +3,8 @@ import { HashnodeService } from './hashnodeService';
 import { AppConfig } from '../config/config';
 import Logger from '../logger/logger';
 import { convertToSlug } from '../utils/fetch';
+import { Article } from '../controllers/hashnodeController';
+import { PageObjectResponse, PartialPageObjectResponse, PartialDatabaseObjectResponse, DatabaseObjectResponse } from '@notionhq/client/build/src/api-endpoints';
 
 export class NotionService {
   private readonly notionRepository;
@@ -22,7 +24,7 @@ export class NotionService {
     );
   }
 
-  getArticleById(pageId: string) {
+  getArticlePageContent(pageId: string) {
     return this.notionRepository.getPageContent(pageId);
   }
 
@@ -85,5 +87,9 @@ export class NotionService {
   ) {
     this.contextLogger.info(`Updating Notion blog properties at ${properties.url}`);
     return this.notionRepository.updatePageProperties(pageId, properties);
+  }
+
+   processArticleProperties(article: PageObjectResponse | PartialPageObjectResponse | PartialDatabaseObjectResponse | DatabaseObjectResponse) {
+    return this.notionRepository.processArticleProperties(article);
   }
 }
