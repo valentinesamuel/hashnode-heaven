@@ -21,9 +21,9 @@ const buildVersion = versionInfo.buildVersion || 'unknown';
 const gitCommitHash = versionInfo.gitCommitHash || 'unknown';
 
 class ContextLogger {
-  private logger: Logger;
+  private readonly logger: Logger;
 
-  constructor(defaultFormat: 'json' | 'human' = 'json') {
+  constructor(defaultFormat: 'json' | 'human' = 'human') {
     this.logger = createLogger({
       level: 'info',
       format: defaultFormat === 'json' ? jsonFormat : humanReadableFormat,

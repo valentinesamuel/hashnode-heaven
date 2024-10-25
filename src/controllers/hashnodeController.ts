@@ -48,7 +48,8 @@ export class HashnodeController {
         this.contextLogger = Logger;
     }
 
-    async postArticlesToBePublished(req: Request, res: Response) {
+    async postArticlesToBePublished() {
+        const postedArticles = []
         const articles = await notionService.getArticlesToBePublished('☘️ To Do');
 
         if (!articles) {
@@ -65,7 +66,7 @@ export class HashnodeController {
                 subtitle: articleProperties.subTitle,
                 tags: articleProperties.tags,
                 enableTableOfContent: true,
-                coverImageUrl: "http://127.0.0.1:54321/storage/v1/object/public/testbucket/azureLogo.jpeg",
+                coverImageUrl: articleProperties.cover.url,
             };
             const { publishPost } = (await notionService.publishBlogPostToHashnode(data))
 
@@ -75,7 +76,7 @@ export class HashnodeController {
                 notionTags.push(tag.slug)
             }
 
-            await notionService.updateNotionBlogPorperties(article.id, {
+          const res =   await notionService.updateNotionBlogPorperties(article.id, {
                 status: NOTIONCOLUMNS.IN_PROGRESS,
                 url: publishPost.post?.url as string,
                 last_published_at: new Date(publishPost.post?.updatedAt || publishPost.post?.publishedAt).toISOString(),
@@ -84,6 +85,9 @@ export class HashnodeController {
                 tags: notionTags,
                 first_published_at: new Date(publishPost.post?.publishedAt).toISOString(),
             });
+
+            postedArticles.push(res)
         }
+        return postedArticles;
     }
 }

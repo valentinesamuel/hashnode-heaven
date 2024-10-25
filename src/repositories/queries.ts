@@ -112,6 +112,7 @@ mutation UpdatePost($input: UpdatePostInput!) {
         featured
         publishedAt
         updatedAt
+        readTimeInMinutes
       }
     }
   }
@@ -152,6 +153,7 @@ mutation removePost($input: RemovePostInput!) {
       featured
       publishedAt
       updatedAt
+      readTimeInMinutes
     }
   }
 }`;
