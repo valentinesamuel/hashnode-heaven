@@ -21,7 +21,7 @@ app.get('/', async (req, res) => {
 
   console.log(response)
 
-  res.json({ message: "response" });
+  res.json({ message: response });
 });
 
 // app.use((err: Error, _req: Request, _res: Response, next: NextFunction) => {

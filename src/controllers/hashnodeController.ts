@@ -118,4 +118,8 @@ export class HashnodeController {
         }
         return postedArticles;
     }
+
+    async updatePublishedArticles(): Promise<Article[] | void> {
+        
+    }
 }

@@ -4,9 +4,9 @@ import { BlockObjectResponse } from '@notionhq/client/build/src/api-endpoints';
 
 export class NotionHelper {
     private readonly rateLimit = 3;
-    private delayBetweenRequests = 1000 / this.rateLimit;
+    private readonly delayBetweenRequests = 1000 / this.rateLimit;
 
-    constructor(private notion: Client) { }
+    constructor(private readonly notion: Client) { }
 
     async convertNotionBlocksToMarkdown(pageId: string) {
         const filePath = 'tempArticle.md';
@@ -15,12 +15,12 @@ export class NotionHelper {
         fs.writeFileSync(filePath, markdownContent);
 
         const fileContent = fs.readFileSync(filePath, 'utf-8');
-        fs.unlinkSync(filePath);
+        // fs.unlinkSync(filePath); // Uncomment if you want to delete the file after reading
         return fileContent;
     }
 
     private async fetchBlocksRecursively(blockId: string): Promise<BlockObjectResponse[]> {
-        let blocks = await this.notion.blocks.children.list({ block_id: blockId });
+        const blocks = await this.notion.blocks.children.list({ block_id: blockId });
         const allBlocks = [...blocks.results];
 
         // Helper to delay requests
@@ -45,41 +45,57 @@ export class NotionHelper {
         return lines.join('\n');
     }
 
+    private async blockToMarkdown(block: any, level: number = 0): Promise<string> {
+        let markdownContent = "";
+        const indentation = " ".repeat(level * 4); // 4 spaces for each level of indentation
 
-    private async blockToMarkdown(block: BlockObjectResponse, depth: number = 0): Promise<string> {
-        const indentation = '  '.repeat(depth);
-        let markdown = '';
+        switch (block.type) {
+            case "to_do":
+                const toDoText = block.to_do.rich_text[0]?.plain_text ?? '';
+                markdownContent += `${indentation}- [ ] ${toDoText}\n`;
+                break;
 
-        if (isFullBlock(block)) {
-            switch (block.type) {
-                case 'paragraph':
-                    markdown += `${indentation}${block.paragraph.rich_text.map((t) => t.plain_text).join('')}\n`;
-                    break;
-                case 'heading_1':
-                    markdown += `${indentation}# ${block.heading_1.rich_text.map((t) => t.plain_text).join('')}\n`;
-                    break;
-                case 'heading_2':
-                    markdown += `${indentation}## ${block.heading_2.rich_text.map((t) => t.plain_text).join('')}\n`;
-                    break;
-                case 'heading_3':
-                    markdown += `${indentation}### ${block.heading_3.rich_text.map((t) => t.plain_text).join('')}\n`;
-                    break;
-                case 'bulleted_list_item':
-                    markdown += `${indentation}- ${block.bulleted_list_item.rich_text.map((t) => t.plain_text).join('')}\n`;
-                    break;
-                case 'numbered_list_item':
-                    markdown += `${indentation}1. ${block.numbered_list_item.rich_text.map((t) => t.plain_text).join('')}\n`;
-                    break;
-                case 'code':
-                    markdown += `${indentation}\`\`\`${block.code.language}\n${block.code.rich_text.map((t) => t.plain_text).join('')}\n\`\`\`\n`;
-                    break;
-                case 'image':
-                    const imageUrl = block.image.type === 'external' ? block.image.external.url : block.image.file.url;
-                    markdown += `${indentation}![Image](${imageUrl})\n\n`;
-                    break;
+            case "bulleted_list_item":
+                const bulletText = block.bulleted_list_item.rich_text[0]?.plain_text ?? '';
+                markdownContent += `${indentation}- ${bulletText}\n`;
+                break;
+
+            case "numbered_list_item":
+                const numberText = block.numbered_list_item.rich_text[0]?.plain_text ?? '';
+                markdownContent += `${indentation}1. ${numberText}\n`;
+                break;
+
+            case "heading_1":
+                const heading1Text = block.heading_1.rich_text[0]?.plain_text ?? '';
+                markdownContent += `# ${heading1Text}\n`;
+                break;
+
+            case "heading_2":
+                const heading2Text = block.heading_2.rich_text[0]?.plain_text ?? '';
+                markdownContent += `## ${heading2Text}\n`;
+                break;
+
+            case "heading_3":
+                const heading3Text = block.heading_3.rich_text[0]?.plain_text ?? '';
+                markdownContent += `### ${heading3Text}\n`;
+                break;
+
+            case "paragraph":
+                const paragraphText = block.paragraph.rich_text[0]?.plain_text ?? '';
+                markdownContent += `${indentation}${paragraphText}\n`;
+                break;
+
+            // Add other block types as necessary
+        }
+
+        // Fetch and process children if the block has children
+        if (block.has_children) {
+            const childBlocks = await this.fetchBlocksRecursively(block.id);
+            for (const childBlock of childBlocks) {
+                markdownContent += await this.blockToMarkdown(childBlock, level + 1);
             }
         }
 
-        return markdown;
+        return markdownContent;
     }
 }
